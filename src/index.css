@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dashboard theme mapped to landing palette */
+.app-theme.bg-slate-950 {
+  background:
+    radial-gradient(circle at 12% 5%, rgba(120, 231, 255, 0.14), transparent 40%),
+    radial-gradient(circle at 87% 80%, rgba(34, 242, 190, 0.1), transparent 46%),
+    linear-gradient(165deg, #04111a 0%, #082235 42%, #0d364e 100%) !important;
+}
+
+.app-theme .bg-slate-900 {
+  background-color: rgba(9, 29, 44, 0.84) !important;
+}
+
+.app-theme .bg-slate-900\/80 {
+  background-color: rgba(9, 29, 44, 0.8) !important;
+}
+
+.app-theme .bg-slate-900\/50 {
+  background-color: rgba(9, 29, 44, 0.56) !important;
+}
+
+.app-theme .bg-slate-800 {
+  background-color: rgba(17, 45, 64, 0.86) !important;
+}
+
+.app-theme .bg-slate-800\/50 {
+  background-color: rgba(17, 45, 64, 0.56) !important;
+}
+
+.app-theme .bg-slate-700 {
+  background-color: rgba(24, 56, 78, 0.9) !important;
+}
+
+.app-theme .border-slate-800 {
+  border-color: rgba(110, 177, 208, 0.24) !important;
+}
+
+.app-theme .border-slate-700 {
+  border-color: rgba(120, 188, 219, 0.24) !important;
+}
+
+.app-theme .divide-slate-800 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(110, 177, 208, 0.24) !important;
+}
+
+.app-theme .text-slate-500 {
+  color: #7798ac !important;
+}
+
+.app-theme .text-slate-400 {
+  color: #9ec0d3 !important;
+}
+
+.app-theme .text-slate-300 {
+  color: #c9dfee !important;
+}
+
+.app-theme .text-violet-400,
+.app-theme .text-violet-300 {
+  color: #74ddff !important;
+}
+
+.app-theme .bg-violet-500 {
+  background-color: #1ebec9 !important;
+}
+
+.app-theme .bg-violet-500\/10 {
+  background-color: rgba(62, 214, 255, 0.16) !important;
+}
+
+.app-theme .border-violet-500\/20 {
+  border-color: rgba(94, 226, 255, 0.32) !important;
+}
+
+.app-theme .hover\:bg-violet-600:hover {
+  background-color: #17a8b3 !important;
+}
+
+.app-theme .hover\:text-violet-400:hover,
+.app-theme .hover\:text-violet-300:hover {
+  color: #8de8ff !important;
+}
+
+.app-theme .hover\:border-violet-500\/50:hover {
+  border-color: rgba(122, 236, 255, 0.56) !important;
+}
+
+.app-theme .focus\:ring-violet-500:focus {
+  --tw-ring-color: rgba(79, 215, 236, 0.66) !important;
+}
+
+.app-theme .from-violet-500 {
+  --tw-gradient-from: #25c0ce var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(37 192 206 / 0) var(--tw-gradient-to-position) !important;
+}
+
+.app-theme .to-cyan-500 {
+  --tw-gradient-to: #1de0bf var(--tw-gradient-to-position) !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Animation for pulse */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

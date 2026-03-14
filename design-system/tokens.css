@@ -1,0 +1,49 @@
+:root {
+  --font-display: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "Manrope", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+
+  --bg-base: #05131c;
+  --bg-surface: #0c2534;
+  --bg-elevated: #113247;
+  --bg-soft: #16425a;
+
+  --text-primary: #eaf6ff;
+  --text-secondary: #a9c2d4;
+  --text-muted: #7d9bb0;
+
+  --accent-teal: #00d0b4;
+  --accent-teal-strong: #00f2d4;
+  --accent-amber: #ffb756;
+  --accent-coral: #ff6b66;
+  --accent-blue: #5ab3ff;
+
+  --success: #3fe8c2;
+  --warning: #ffbf5f;
+  --danger: #ff6b66;
+  --info: #61b6ff;
+
+  --border: #25506a;
+  --border-strong: #2e6688;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.25);
+  --shadow-strong: 0 16px 42px rgba(0, 0, 0, 0.35);
+
+  --duration-fast: 0.18s;
+  --duration-base: 0.3s;
+  --duration-slow: 0.6s;
+}

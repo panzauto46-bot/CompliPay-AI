@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CompliPay AI - Institutional Operations Console</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo">CP</div>
+          <div>
+            <h1>CompliPay AI</h1>
+            <p>Programmable Stablecoin Infrastructure for Institutions</p>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <span class="env-chip">Environment: Solana Testnet</span>
+          <span class="node-chip">Node Health <strong>99.98%</strong></span>
+          <span class="env-chip">Role: Treasury Manager</span>
+        </div>
+      </header>
+
+      <main class="main-grid">
+        <section class="panel kpi-strip">
+          <div class="panel-head">
+            <div>
+              <h2>Institutional Operations Dashboard</h2>
+              <p class="sub">Live overview across payments, compliance, and settlement rails.</p>
+            </div>
+          </div>
+          <div class="flow-steps">
+            <span class="step active">1. Login</span>
+            <span class="step active">2. KYC Verified</span>
+            <span class="step">3. Build Contract</span>
+            <span class="step">4. Compliance</span>
+            <span class="step">5. AI Execute</span>
+            <span class="step">6. On-Chain Audit</span>
+          </div>
+          <div class="kpi-grid">
+            <article class="kpi-card">
+              <p class="label">24H Volume</p>
+              <p class="value">USDC 2.8M</p>
+              <p class="trend">+11.2% vs yesterday</p>
+            </article>
+            <article class="kpi-card">
+              <p class="label">Avg Settlement</p>
+              <p class="value">2.4 sec</p>
+              <p class="trend">-34% latency reduced</p>
+            </article>
+            <article class="kpi-card">
+              <p class="label">Compliance Pass</p>
+              <p class="value" id="passRate">82%</p>
+              <p class="trend">Awaiting KYT scan</p>
+            </article>
+            <article class="kpi-card">
+              <p class="label">Active Contracts</p>
+              <p class="value" id="contractCount">17</p>
+              <p class="trend">3 expiring in 48h</p>
+            </article>
+          </div>
+        </section>
+
+        <aside class="panel quick-actions">
+          <div class="panel-head">
+            <div>
+              <h2>Quick Actions</h2>
+              <p class="sub">Critical actions for demo and operations.</p>
+            </div>
+          </div>
+          <div class="actions-wrap">
+            <button class="btn btn-primary" id="newPaymentBtn">New Programmable Payment</button>
+            <button class="btn" id="runComplianceBtn">Run Compliance Check</button>
+            <button class="btn btn-primary" id="executeAiBtn">Execute With AI Agent</button>
+            <button class="btn btn-danger" id="escalateBtn">Escalate High-Risk Case</button>
+          </div>
+          <p class="hint" id="actionHint">
+            Start from payment builder, run compliance, then execute with AI agent to generate on-chain tx.
+          </p>
+        </aside>
+
+        <section class="panel payment-builder">
+          <div class="panel-head">
+            <div>
+              <h2>Programmable Payment Builder</h2>
+              <p class="sub">Configure institutional transfer logic before smart contract deployment.</p>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="input-group">
+              <label for="payer">Payer Treasury Account</label>
+              <input class="input" id="payer" value="SG-TRSY-0092" />
+            </div>
+            <div class="input-group">
+              <label for="beneficiary">Beneficiary Wallet</label>
+              <input class="input" id="beneficiary" value="9xQeWvG816bUx9EPx9JQ..." />
+            </div>
+            <div class="input-group">
+              <label for="amount">Amount</label>
+              <input class="input" id="amount" type="number" value="250000" />
+            </div>
+            <div class="input-group">
+              <label for="token">Settlement Asset</label>
+              <select class="select" id="token">
+                <option>USDC</option>
+                <option>USDT</option>
+                <option>PYUSD</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="rule">Payment Rule</label>
+              <select class="select" id="rule">
+                <option>Milestone Settlement</option>
+                <option>Escrow Release</option>
+                <option>Subscription</option>
+                <option>Treasury Rebalancing</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="schedule">Schedule</label>
+              <input class="input" id="schedule" type="datetime-local" />
+            </div>
+          </div>
+          <div class="inline-actions">
+            <button class="btn" id="saveDraftBtn">Save Contract Draft</button>
+            <button class="btn btn-primary" id="deployBtn">Deploy to Solana Testnet</button>
+          </div>
+        </section>
+
+        <section class="panel compliance">
+          <div class="panel-head">
+            <div>
+              <h2>Compliance Command Center</h2>
+              <p class="sub">KYC, KYT, AML, and Travel Rule checks with explainability.</p>
+            </div>
+          </div>
+          <div class="matrix">
+            <div class="matrix-row">
+              <span class="matrix-key">KYC</span>
+              <span>Institution identity and officer match</span>
+              <span class="status pending" id="statusKyc">Pending</span>
+            </div>
+            <div class="matrix-row">
+              <span class="matrix-key">KYT</span>
+              <span>Destination wallet behavior analysis</span>
+              <span class="status pending" id="statusKyt">Pending</span>
+            </div>
+            <div class="matrix-row">
+              <span class="matrix-key">AML</span>
+              <span>Sanctions and illicit pattern screening</span>
+              <span class="status pending" id="statusAml">Pending</span>
+            </div>
+            <div class="matrix-row">
+              <span class="matrix-key">Travel Rule</span>
+              <span>Originator and beneficiary metadata package</span>
+              <span class="status pending" id="statusTravel">Pending</span>
+            </div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label">
+              <span>Compliance Confidence</span>
+              <strong id="complianceScoreText">44%</strong>
+            </div>
+            <div class="progress"><span id="complianceBar"></span></div>
+          </div>
+          <p class="hint" id="complianceNote">No checks executed in this session.</p>
+        </section>
+
+        <section class="panel ai-agent">
+          <div class="panel-head">
+            <div>
+              <h2>AI Payment Agent</h2>
+              <p class="sub">Automation recommendations with policy guardrails and confidence score.</p>
+            </div>
+          </div>
+          <div class="feed">
+            <article class="feed-item">
+              <h3>Route Optimization</h3>
+              <p>
+                Recommended route: <strong>Direct USDC transfer</strong> via low-congestion slot window,
+                expected fee <strong>$0.84</strong> and ETA <strong>2.3 sec</strong>.
+              </p>
+            </article>
+            <article class="feed-item">
+              <h3>FX Advisory</h3>
+              <p>
+                Hold conversion to fiat for 90 minutes. Current spread is outside preferred policy band
+                by <strong>0.42%</strong>.
+              </p>
+            </article>
+            <article class="feed-item risk-alert">
+              <h3>Risk Notice</h3>
+              <p id="aiRiskMessage">
+                KYT still pending. Auto-execution is paused until compliance score reaches minimum threshold.
+              </p>
+            </article>
+          </div>
+          <p class="hint" id="aiState">Execution Mode: Policy Locked (awaiting compliance)</p>
+        </section>
+
+        <section class="panel integration">
+          <div class="panel-head">
+            <div>
+              <h2>Institutional Wallet Integrations</h2>
+              <p class="sub">Custody and signing orchestration with secure policy controls.</p>
+            </div>
+          </div>
+          <div class="wallet-list">
+            <article class="wallet-item">
+              <div>
+                <h3>Fireblocks Vault - APAC Treasury</h3>
+                <p>Signer policy: 2-of-3 | Last sync: 18 sec ago</p>
+              </div>
+              <span class="link-chip">Connected</span>
+            </article>
+            <article class="wallet-item">
+              <div>
+                <h3>Institutional HSM Cluster</h3>
+                <p>Signer policy: 3-of-5 | Last sync: 31 sec ago</p>
+              </div>
+              <span class="link-chip">Connected</span>
+            </article>
+            <article class="wallet-item">
+              <div>
+                <h3>Travel Rule Gateway</h3>
+                <p>VASP message channel healthy and encrypted</p>
+              </div>
+              <span class="link-chip">Active</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel audit">
+          <div class="panel-head">
+            <div>
+              <h2>On-Chain Audit Trail</h2>
+              <p class="sub">Tamper-proof transaction records for auditors and regulators.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Contract ID</th>
+                  <th>Tx Hash</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Timestamp (UTC)</th>
+                  <th>Network</th>
+                </tr>
+              </thead>
+              <tbody id="auditBody">
+                <tr>
+                  <td class="code">MILE-22091</td>
+                  <td class="code">5Trm...aQ91</td>
+                  <td class="amount">USDC 75,000</td>
+                  <td><span class="status ok">Confirmed</span></td>
+                  <td>2026-03-14 08:10:21</td>
+                  <td>Solana Testnet</td>
+                </tr>
+                <tr>
+                  <td class="code">SUBS-78212</td>
+                  <td class="code">7KaZ...sP2L</td>
+                  <td class="amount">USDC 12,400</td>
+                  <td><span class="status pending">Pending</span></td>
+                  <td>2026-03-14 08:13:59</td>
+                  <td>Solana Testnet</td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="footer-note" id="lastEvent">Last event: Dashboard initialized for demo session.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
