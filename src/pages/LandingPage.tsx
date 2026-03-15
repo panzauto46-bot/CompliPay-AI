@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import {
   ArrowRight,
   CheckCircle2,
@@ -66,6 +67,14 @@ const proofPoints = [
 ];
 
 export default function LandingPage() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div className="landing-page">
       <div className="landing-backdrop" aria-hidden="true">
@@ -75,9 +84,10 @@ export default function LandingPage() {
         <span className="grid-noise" />
       </div>
 
-      <header className="landing-nav">
-        <div className="landing-container nav-inner">
+      <header className={`landing-nav${scrolled ? ' nav-scrolled' : ''}`}>
+        <div className="nav-glass">
           <a href="#home" className="brand">
+            <span className="brand-dot" />
             CompliPay AI
           </a>
 
@@ -94,8 +104,9 @@ export default function LandingPage() {
           </nav>
 
           <div className="nav-cta">
-            <Link to="/dashboard" className="btn btn-nav">
-              Open Dashboard
+            <Link to="/login" className="btn btn-nav">
+              <Sparkles className="btn-icon" />
+              Get Started
             </Link>
           </div>
         </div>
