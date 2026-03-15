@@ -65,6 +65,7 @@ export default function Payments() {
     createPayment,
     runCompliance,
     executePayment,
+    executeBatchPayments,
     requestAIRecommendation,
   } = useAppData();
 
@@ -75,6 +76,7 @@ export default function Payments() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [form, setForm] = useState(INITIAL_FORM);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
   const [aiRecommendation, setAiRecommendation] = useState<{
     paymentId: string;
     message: string;
@@ -92,6 +94,9 @@ export default function Payments() {
       payment.recipient.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesType && matchesSearch;
   });
+
+  const allFilteredSelected =
+    filteredPayments.length > 0 && filteredPayments.every((payment) => selectedBatchIds.includes(payment.id));
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -198,10 +203,53 @@ export default function Payments() {
     try {
       const tx = await executePayment(paymentId, mode);
       setFeedback(
-        `${mode.toUpperCase()} execution ${tx.simulated ? 'simulated' : 'confirmed'} on ${tx.network}. Tx: ${tx.txHash.slice(0, 12)}...`
+        `${mode.toUpperCase()} execution ${tx.simulated ? 'simulated' : 'confirmed'} on ${tx.network} (${tx.assetType ?? 'sol'}). Tx: ${tx.txHash.slice(0, 12)}...`
       );
+      setSelectedBatchIds((prev) => prev.filter((id) => id !== paymentId));
     } catch (error) {
       setFeedback(error instanceof Error ? error.message : 'Execution failed.');
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
+  const toggleBatchSelection = (paymentId: string) => {
+    setSelectedBatchIds((prev) =>
+      prev.includes(paymentId) ? prev.filter((id) => id !== paymentId) : [...prev, paymentId]
+    );
+  };
+
+  const handleSelectAllFiltered = () => {
+    if (allFilteredSelected) {
+      setSelectedBatchIds((prev) =>
+        prev.filter((id) => !filteredPayments.some((payment) => payment.id === id))
+      );
+      return;
+    }
+    setSelectedBatchIds((prev) => {
+      const merged = new Set(prev);
+      filteredPayments.forEach((payment) => merged.add(payment.id));
+      return [...merged];
+    });
+  };
+
+  const handleExecuteSelectedBatch = async () => {
+    if (selectedBatchIds.length === 0) {
+      setFeedback('Select at least one payment for batch execution.');
+      return;
+    }
+    setIsExecuting(true);
+    try {
+      const response = await executeBatchPayments(selectedBatchIds, 'manual');
+      setFeedback(
+        `Batch ${response.batchId} finished: ${response.summary.completed} completed, ${response.summary.simulated} simulated, ${response.summary.failed} failed.`
+      );
+      const completedIds = response.results
+        .filter((item) => item.status === 'completed' || item.status === 'simulated')
+        .map((item) => item.paymentId);
+      setSelectedBatchIds((prev) => prev.filter((id) => !completedIds.includes(id)));
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : 'Batch execution failed.');
     } finally {
       setIsExecuting(false);
     }
@@ -265,6 +313,32 @@ export default function Payments() {
         </div>
       </div>
 
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-900/70 border border-slate-800 rounded-xl">
+        <div className="flex items-center gap-3">
+          <label className="inline-flex items-center gap-2 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={allFilteredSelected}
+              onChange={handleSelectAllFiltered}
+              className="accent-violet-500"
+            />
+            Select all filtered
+          </label>
+          <span className="text-xs text-slate-400">
+            {selectedBatchIds.length} selected
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={handleExecuteSelectedBatch}
+          disabled={isExecuting || selectedBatchIds.length === 0}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
+        >
+          <Play className="w-4 h-4" />
+          {isExecuting ? 'Running Batch...' : 'Batch Execute Selected'}
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredPayments.map((payment) => (
           <div
@@ -274,6 +348,17 @@ export default function Payments() {
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={selectedBatchIds.includes(payment.id)}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    toggleBatchSelection(payment.id);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="accent-violet-500"
+                  aria-label={`Select ${payment.name} for batch execution`}
+                />
                 <div className="p-2 bg-slate-800 rounded-lg">{getTypeIcon(payment.type)}</div>
                 <div>
                   <h3 className="font-medium text-white">{payment.name}</h3>

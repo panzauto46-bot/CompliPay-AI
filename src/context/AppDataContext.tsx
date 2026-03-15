@@ -12,6 +12,8 @@ import { useAuth } from './AuthContext';
 import {
   AIAgentTask,
   AuditEvent,
+  BatchExecutionResultItem,
+  BatchExecutionSummary,
   ComplianceAlert,
   ComplianceResult,
   ProgrammablePayment,
@@ -50,6 +52,10 @@ interface AppDataContextValue {
   createPayment: (payload: CreatePaymentPayload) => Promise<ProgrammablePayment>;
   runCompliance: (paymentId: string) => Promise<ComplianceResult>;
   executePayment: (paymentId: string, mode: 'manual' | 'ai') => Promise<Transaction>;
+  executeBatchPayments: (
+    paymentIds: string[],
+    mode: 'manual' | 'ai'
+  ) => Promise<{ batchId: string; summary: BatchExecutionSummary; results: BatchExecutionResultItem[] }>;
   requestAIRecommendation: (paymentId: string) => Promise<string>;
   resolveAlert: (alertId: string) => Promise<void>;
   refreshWalletBalances: () => Promise<void>;
@@ -317,6 +323,44 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     return transaction;
   };
 
+  const executeBatchPayments = async (paymentIds: string[], mode: 'manual' | 'ai') => {
+    const response = await apiRequest<{
+      batchId: string;
+      summary: BatchExecutionSummary;
+      results: BatchExecutionResultItem[];
+      transactions: any[];
+      payments: any[];
+      alerts: any[];
+      auditEvents: any[];
+    }>('/api/payments/batch-execute', {
+      method: 'POST',
+      body: JSON.stringify({ paymentIds, mode }),
+    });
+
+    if (Array.isArray(response.transactions) && response.transactions.length > 0) {
+      const nextTransactions = response.transactions.map(hydrateTransaction);
+      setTransactions((prev) => [...nextTransactions, ...prev]);
+    }
+    if (Array.isArray(response.payments) && response.payments.length > 0) {
+      const nextPayments = response.payments.map(hydratePayment);
+      setPayments((prev) =>
+        prev.map((item) => nextPayments.find((next) => next.id === item.id) ?? item)
+      );
+    }
+    if (Array.isArray(response.alerts) && response.alerts.length > 0) {
+      setComplianceAlerts((prev) => [...response.alerts.map(hydrateAlert), ...prev]);
+    }
+    if (Array.isArray(response.auditEvents) && response.auditEvents.length > 0) {
+      setAuditEvents((prev) => [...response.auditEvents.map(hydrateAudit), ...prev]);
+    }
+
+    return {
+      batchId: response.batchId,
+      summary: response.summary,
+      results: response.results,
+    };
+  };
+
   const resolveAlert = async (alertId: string) => {
     const response = await apiRequest<{ alert: any; auditEvent?: any }>(
       `/api/compliance/alerts/${alertId}/resolve`,
@@ -340,7 +384,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   };
 
   const exportTransactionsCsv = () => {
-    const header = 'id,type,amount,currency,status,sender,receiver,timestamp,txHash,network,simulated\n';
+    const header =
+      'id,type,amount,currency,status,sender,receiver,timestamp,txHash,network,simulated,assetType,tokenMint,batchId\n';
     const rows = transactions
       .map((tx) =>
         [
@@ -355,6 +400,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
           tx.txHash,
           tx.network ?? '',
           tx.simulated ? 'true' : 'false',
+          tx.assetType ?? 'sol',
+          tx.tokenMint ?? '',
+          tx.batchId ?? '',
         ].join(',')
       )
       .join('\n');
@@ -383,6 +431,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     createPayment,
     runCompliance,
     executePayment,
+    executeBatchPayments,
     requestAIRecommendation,
     resolveAlert,
     refreshWalletBalances,

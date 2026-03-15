@@ -6,7 +6,7 @@ v3 (progress-based, production-readiness focus)
 ## 0) Current Project Status (Real Readiness)
 
 - **Demo/MVP Readiness:** Very high (live AI + auth + persistent API flow are present)
-- **Production Readiness:** **82%**
+- **Production Readiness:** **86%**
 - Main gap to 100%: external compliance/custody provider integrations, automated test coverage, and submission logistics.
 
 ## 1) MVP Progress Roadmap (0% -> 100%)
@@ -31,7 +31,7 @@ v3 (progress-based, production-readiness focus)
 - Exit criteria:
   - At least one successful end-to-end testnet payment
   - Transaction hash stored and retrievable
-- Status: **85%** (execution flow is API-backed with SQLite persistence and tx evidence)
+- Status: **100%** (single and batch execution are API-backed with SPL transfer path + tx evidence)
 
 ### Phase 3 - Mandatory Compliance Gates (**35% -> 55%**)
 - Implement KYC, KYT, AML, and Travel Rule checks.
@@ -91,14 +91,14 @@ v3 (progress-based, production-readiness focus)
 | Workstream | Weight | Current % | Notes |
 |---|---:|---:|---|
 | Scope & Setup | 15% | 95% | Scope is locked and local fullstack runtime is stable. |
-| Core On-chain Payment | 20% | 85% | Core flow is API-backed with persistent state and Solana execution path. |
+| Core On-chain Payment | 20% | 100% | Core flow is API-backed with SPL transfer path and batch execution support. |
 | Compliance Engine | 20% | 75% | Decision matrix is persistent and connector-ready for external providers. |
 | Audit Trail | 15% | 80% | Audit events are persisted and shown in filterable UI. |
 | AI Guardrails | 12% | 78% | Live LLM chat is integrated while execution remains policy-constrained. |
 | UI/UX Polish | 10% | 90% | Presentation quality is strong across pages. |
 | Submission Assets | 8% | 74% | Docs are strong; final submission assets and lock-in are pending. |
 
-**Estimated total completion (weighted): 82% (real production readiness)**
+**Estimated total completion (weighted): 85.5% (real production readiness, rounded: 86%)**
 
 ## 2.1) Page-by-Page Project Status
 
@@ -106,7 +106,7 @@ v3 (progress-based, production-readiness focus)
 |---|---:|---|
 | Landing (`/`) | 95% | Production copy and visual delivery are near-final. |
 | Dashboard (`/dashboard`) | 78% | KPI and charts now consume persistent API state. |
-| Payments (`/payments`) | 82% | Contract/compliance/AI/execute flow is fully API-backed. |
+| Payments (`/payments`) | 90% | Contract/compliance/AI/execute flow is API-backed with batch execution controls. |
 | Compliance (`/compliance`) | 75% | Alerts, resolve actions, and metrics are backed by persistent API state. |
 | AI Agent (`/ai-agent`) | 80% | Live Qwen API chat is integrated with authenticated backend proxy. |
 | Audit Trail (`/audit-trail`) | 78% | Filterable evidence view now reads persisted append-only logs. |

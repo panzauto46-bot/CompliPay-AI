@@ -245,7 +245,8 @@ export default function Transactions() {
                       {tx.amount.toLocaleString()} {tx.currency}
                     </p>
                     <p className="text-xs text-slate-400">
-                      ~${(tx.amount * 1).toLocaleString()} USD
+                      {(tx.assetType ?? 'sol').toUpperCase()}
+                      {tx.batchId ? ` • Batch ${tx.batchId}` : ''}
                     </p>
                   </td>
                   <td className="px-6 py-4">
@@ -355,6 +356,26 @@ export default function Transactions() {
                   </p>
                 </div>
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 bg-slate-800/50 rounded-lg">
+                  <p className="text-xs text-slate-500">Asset Layer</p>
+                  <p className="text-sm text-white mt-1">{(selectedTx.assetType ?? 'sol').toUpperCase()}</p>
+                </div>
+                <div className="p-4 bg-slate-800/50 rounded-lg">
+                  <p className="text-xs text-slate-500">Token Mint</p>
+                  <p className="text-xs font-mono text-slate-300 mt-1 break-all">
+                    {selectedTx.tokenMint ?? 'N/A'}
+                  </p>
+                </div>
+              </div>
+
+              {selectedTx.batchId && (
+                <div className="p-4 bg-slate-800/50 rounded-lg">
+                  <p className="text-xs text-slate-500">Batch Execution</p>
+                  <p className="text-sm text-white mt-1">{selectedTx.batchId}</p>
+                </div>
+              )}
 
               <div className="p-4 bg-slate-800/50 rounded-lg">
                 <p className="text-xs text-slate-500">From</p>

@@ -87,6 +87,7 @@ CompliPay AI combines **fast on-chain settlement** with **strict compliance cont
 - ✅ Define execution conditions and trigger rules
 - ✅ Schedule payments with fallback actions
 - ✅ Full payment lifecycle management (draft → active → completed)
+- ✅ Batch execution for selected payments (`/api/payments/batch-execute`)
 
 ### Compliance Engine
 - ✅ **KYC (Know Your Customer)** — Identity/business verification gate
@@ -107,6 +108,8 @@ CompliPay AI combines **fast on-chain settlement** with **strict compliance cont
 - ✅ Automatic fallback to devnet
 - ✅ Explicit simulation fallback with clear labeling
 - ✅ Explorer deep links for every transaction
+- ✅ SPL token transfer flow (USDC/USDT-style mint + transfer on-chain)
+- ✅ On-chain policy memo instruction (Memo Program) attached to execution tx
 
 ### Security & Auth
 - ✅ Session-based authentication with JWT tokens
@@ -447,6 +450,10 @@ COMPLIANCE_PROVIDER_KEY=                 # External compliance API key
 # ─── Solana Configuration (Optional) ──────────────────────
 SOLANA_WALLET_CLUSTER=devnet             # Wallet balance query cluster
 SOLANA_RPC_ENDPOINT=                     # Custom RPC endpoint override
+
+# ─── SPL Execution Tuning (Optional) ──────────────────────
+SPL_DEFAULT_DECIMALS=6                   # Decimals used for demo SPL mint
+MEMO_PROGRAM_ID=MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr
 ```
 
 > **Note:** The AI chat feature requires a valid `DASHSCOPE_API_KEY`. All other features work without external API keys.
@@ -471,6 +478,7 @@ SOLANA_RPC_ENDPOINT=                     # Custom RPC endpoint override
 | `POST` | `/api/payments/:id/compliance` | ✅ | admin, operator | Run compliance checks |
 | `POST` | `/api/payments/:id/ai-recommendation` | ✅ | admin, operator | Request AI execution recommendation |
 | `POST` | `/api/payments/:id/execute` | ✅ | admin, operator | Execute payment on Solana |
+| `POST` | `/api/payments/batch-execute` | ✅ | admin, operator | Execute multiple policy-allowed payments in one batch |
 
 ### Compliance
 
@@ -646,12 +654,12 @@ Referrer-Policy: no-referrer
 
 ## 📊 Roadmap & Status
 
-### Overall Production Readiness: **82%**
+### Overall Production Readiness: **86%**
 
 | Phase | Weight | Progress | Description |
 |---|---|---|---|
 | Scope & Setup | 15% | 🟢 95% | Scope locked, fullstack runtime stable |
-| Core Payment | 20% | 🟢 85% | API-backed with persistent state and Solana execution |
+| Core Payment | 20% | 🟢 100% | API-backed, SPL execution path, and batch execution are implemented |
 | Compliance Engine | 20% | 🟡 75% | Policy logic persistent, external provider connector ready |
 | Audit Trail | 15% | 🟢 80% | Persisted and shown in filterable UI |
 | AI Guardrails | 12% | 🟡 78% | Live LLM chat with policy constraint |
@@ -664,7 +672,7 @@ Referrer-Policy: no-referrer
 |---|---|---|
 | Landing `/` | 🟢 95% | Near-final visual delivery |
 | Dashboard `/dashboard` | 🟡 78% | Persistent API state consumption |
-| Payments `/payments` | 🟢 82% | Full API-backed lifecycle |
+| Payments `/payments` | 🟢 90% | Full API-backed lifecycle + multi-select batch execution |
 | Compliance `/compliance` | 🟡 75% | Persistent alerts and resolution |
 | AI Agent `/ai-agent` | 🟢 80% | Live Qwen chat integrated |
 | Audit Trail `/audit-trail` | 🟡 78% | Append-only persistent logs |

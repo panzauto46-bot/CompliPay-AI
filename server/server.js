@@ -10,10 +10,18 @@ import {
   Connection,
   Keypair,
   LAMPORTS_PER_SOL,
+  PublicKey,
   sendAndConfirmTransaction,
   SystemProgram,
   Transaction,
+  TransactionInstruction,
 } from "@solana/web3.js";
+import {
+  createMint,
+  createTransferCheckedInstruction,
+  getOrCreateAssociatedTokenAccount,
+  mintTo,
+} from "@solana/spl-token";
 
 dotenv.config();
 
@@ -33,6 +41,10 @@ const COMPLIANCE_PROVIDER_URL = process.env.COMPLIANCE_PROVIDER_URL || "";
 const COMPLIANCE_PROVIDER_KEY = process.env.COMPLIANCE_PROVIDER_KEY || "";
 const SOLANA_WALLET_CLUSTER = process.env.SOLANA_WALLET_CLUSTER || "devnet";
 const SOLANA_RPC_ENDPOINT = process.env.SOLANA_RPC_ENDPOINT || "";
+const SPL_DEFAULT_DECIMALS = Number(process.env.SPL_DEFAULT_DECIMALS || 6);
+const MEMO_PROGRAM_ID = new PublicKey(
+  process.env.MEMO_PROGRAM_ID || "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+);
 
 const dataDir = process.env.DB_DIR
   ? path.resolve(process.env.DB_DIR)
@@ -94,7 +106,10 @@ CREATE TABLE IF NOT EXISTS transactions (
   compliance_status TEXT NOT NULL,
   explorer_url TEXT,
   network TEXT,
-  simulated INTEGER NOT NULL DEFAULT 0
+  simulated INTEGER NOT NULL DEFAULT 0,
+  asset_type TEXT NOT NULL DEFAULT 'sol',
+  token_mint TEXT,
+  batch_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS compliance_alerts (
@@ -137,6 +152,18 @@ CREATE TABLE IF NOT EXISTS audit_events (
   user_id TEXT
 );
 `);
+
+function ensureColumn(tableName, columnName, definition) {
+  const columns = db.prepare(`PRAGMA table_info(${tableName})`).all();
+  const exists = columns.some((column) => column.name === columnName);
+  if (!exists) {
+    db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`);
+  }
+}
+
+ensureColumn("transactions", "asset_type", "TEXT NOT NULL DEFAULT 'sol'");
+ensureColumn("transactions", "token_mint", "TEXT");
+ensureColumn("transactions", "batch_id", "TEXT");
 
 function nowIso() {
   return new Date().toISOString();
@@ -209,6 +236,9 @@ function serializeTransaction(row) {
     explorerUrl: row.explorer_url || undefined,
     network: row.network || undefined,
     simulated: Boolean(row.simulated),
+    assetType: row.asset_type || "sol",
+    tokenMint: row.token_mint || undefined,
+    batchId: row.batch_id || undefined,
   };
 }
 
@@ -492,7 +522,22 @@ function pseudoSignature() {
   return value;
 }
 
-async function executeOnCluster(uiAmount, cluster) {
+function buildConditionDigest(payment) {
+  const payload = JSON.stringify({
+    paymentId: payment.id,
+    conditions: Array.isArray(payment.conditions) ? payment.conditions : [],
+    decision: payment.complianceResult?.decision || "unknown",
+  });
+  return crypto.createHash("sha256").update(payload).digest("hex");
+}
+
+function uiAmountToRawUnits(uiAmount, decimals) {
+  const safeAmount = Number.isFinite(uiAmount) ? Math.max(0, uiAmount) : 0;
+  const factor = 10 ** decimals;
+  return BigInt(Math.max(1, Math.round(safeAmount * factor)));
+}
+
+async function executeSolOnCluster(uiAmount, cluster) {
   const connection = new Connection(clusterApiUrl(cluster), "confirmed");
   const sender = Keypair.generate();
   const recipient = Keypair.generate().publicKey;
@@ -518,15 +563,84 @@ async function executeOnCluster(uiAmount, cluster) {
     explorerUrl: `https://explorer.solana.com/tx/${signature}?cluster=${cluster}`,
     network: cluster,
     simulated: false,
+    assetType: "sol",
+    tokenMint: null,
   };
 }
 
-async function executePaymentOnSolana(uiAmount) {
+async function executeSplOnCluster(payment, cluster, mode) {
+  const connection = new Connection(clusterApiUrl(cluster), "confirmed");
+  const payer = Keypair.generate();
+  const recipientOwner = Keypair.generate().publicKey;
+
+  const airdropSignature = await connection.requestAirdrop(payer.publicKey, 2 * LAMPORTS_PER_SOL);
+  await connection.confirmTransaction(airdropSignature, "confirmed");
+
+  const decimals = SPL_DEFAULT_DECIMALS;
+  const mint = await createMint(connection, payer, payer.publicKey, null, decimals);
+  const senderAta = await getOrCreateAssociatedTokenAccount(connection, payer, mint, payer.publicKey);
+  const recipientAta = await getOrCreateAssociatedTokenAccount(connection, payer, mint, recipientOwner);
+
+  const rawAmount = uiAmountToRawUnits(payment.amount, decimals);
+  const mintSignature = await mintTo(
+    connection,
+    payer,
+    mint,
+    senderAta.address,
+    payer,
+    rawAmount
+  );
+
+  const memoPayload = {
+    product: "CompliPay AI",
+    kind: "programmable_payment_policy",
+    paymentId: payment.id,
+    decision: payment.complianceResult?.decision || "unknown",
+    mode,
+    conditionDigest: buildConditionDigest(payment),
+    timestamp: nowIso(),
+  };
+  const memoInstruction = new TransactionInstruction({
+    keys: [],
+    programId: MEMO_PROGRAM_ID,
+    data: Buffer.from(JSON.stringify(memoPayload), "utf8"),
+  });
+  const transferInstruction = createTransferCheckedInstruction(
+    senderAta.address,
+    mint,
+    recipientAta.address,
+    payer.publicKey,
+    rawAmount,
+    decimals
+  );
+  const tx = new Transaction().add(memoInstruction, transferInstruction);
+  const transferSignature = await sendAndConfirmTransaction(connection, tx, [payer], {
+    commitment: "confirmed",
+    skipPreflight: false,
+  });
+
+  return {
+    signature: transferSignature,
+    explorerUrl: `https://explorer.solana.com/tx/${transferSignature}?cluster=${cluster}`,
+    network: cluster,
+    simulated: false,
+    assetType: "spl",
+    tokenMint: mint.toBase58(),
+    setupTxHash: mintSignature,
+  };
+}
+
+async function executePaymentOnSolana(payment, mode = "manual") {
+  const isStablecoinLike = payment.currency === "USDC" || payment.currency === "USDT";
   try {
-    return await executeOnCluster(uiAmount, "testnet");
+    return isStablecoinLike
+      ? await executeSplOnCluster(payment, "testnet", mode)
+      : await executeSolOnCluster(payment.amount, "testnet");
   } catch {
     try {
-      return await executeOnCluster(uiAmount, "devnet");
+      return isStablecoinLike
+        ? await executeSplOnCluster(payment, "devnet", mode)
+        : await executeSolOnCluster(payment.amount, "devnet");
     } catch {
       const signature = pseudoSignature();
       return {
@@ -534,9 +648,53 @@ async function executePaymentOnSolana(uiAmount) {
         explorerUrl: `https://explorer.solana.com/tx/${signature}?cluster=devnet`,
         network: "simulated",
         simulated: true,
+        assetType: isStablecoinLike ? "spl-simulated" : "sol",
+        tokenMint: null,
+        setupTxHash: null,
       };
     }
   }
+}
+
+function mapPaymentTypeToTransactionType(paymentType) {
+  return paymentType === "milestone"
+    ? "payment"
+    : paymentType === "automated"
+      ? "treasury"
+      : paymentType;
+}
+
+function insertTransactionRecord({
+  transactionId,
+  payment,
+  execution,
+  senderInstitution,
+  batchId,
+}) {
+  const txTimestamp = nowIso();
+  db.prepare(
+    `INSERT INTO transactions (
+      id, type, amount, currency, status, sender, receiver, timestamp, tx_hash, compliance_status,
+      explorer_url, network, simulated, asset_type, token_mint, batch_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(
+    transactionId,
+    mapPaymentTypeToTransactionType(payment.type),
+    payment.amount,
+    payment.currency,
+    execution.simulated ? "processing" : "completed",
+    senderInstitution,
+    payment.recipient,
+    txTimestamp,
+    execution.signature,
+    "passed",
+    execution.explorerUrl,
+    execution.network,
+    toBoolFlag(execution.simulated),
+    execution.assetType || "sol",
+    execution.tokenMint || null,
+    batchId || null
+  );
 }
 
 function parseAuthToken(req) {
@@ -936,31 +1094,14 @@ app.post("/api/payments/:id/execute", requireAuth, requireRole(["admin", "operat
     userId: req.auth.user.id,
   });
 
-  const execution = await executePaymentOnSolana(payment.amount);
-  const txType =
-    payment.type === "milestone" ? "payment" : payment.type === "automated" ? "treasury" : payment.type;
+  const execution = await executePaymentOnSolana(payment, mode);
   const txId = randomId("tx");
-  const txTimestamp = nowIso();
-  db.prepare(
-    `INSERT INTO transactions (
-      id, type, amount, currency, status, sender, receiver, timestamp, tx_hash, compliance_status,
-      explorer_url, network, simulated
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(
-    txId,
-    txType,
-    payment.amount,
-    payment.currency,
-    execution.simulated ? "processing" : "completed",
-    req.auth.user.institution,
-    payment.recipient,
-    txTimestamp,
-    execution.signature,
-    "passed",
-    execution.explorerUrl,
-    execution.network,
-    toBoolFlag(execution.simulated)
-  );
+  insertTransactionRecord({
+    transactionId: txId,
+    payment,
+    execution,
+    senderInstitution: req.auth.user.institution,
+  });
 
   db.prepare("UPDATE payments SET status = ?, last_tx_hash = ?, updated_at = ? WHERE id = ?").run(
     execution.simulated ? "active" : "completed",
@@ -1004,6 +1145,152 @@ app.post("/api/payments/:id/execute", requireAuth, requireRole(["admin", "operat
     auditEvent,
   });
 });
+
+app.post(
+  "/api/payments/batch-execute",
+  requireAuth,
+  requireRole(["admin", "operator"]),
+  async (req, res) => {
+    const rawIds = Array.isArray(req.body?.paymentIds) ? req.body.paymentIds : [];
+    const uniqueIds = [...new Set(rawIds.filter((id) => typeof id === "string" && id.trim().length > 0))];
+    if (uniqueIds.length === 0) {
+      return res.status(400).json({ error: "paymentIds must contain at least one valid payment id." });
+    }
+    if (uniqueIds.length > 20) {
+      return res.status(400).json({ error: "Batch size limit is 20 payments per request." });
+    }
+
+    const mode = req.body?.mode === "ai" ? "ai" : "manual";
+    const batchId = randomId("batch");
+    const results = [];
+    const executedTransactions = [];
+    const updatedPayments = [];
+    const alerts = [];
+    const auditEvents = [];
+
+    for (const paymentId of uniqueIds) {
+      const paymentRow = db.prepare("SELECT * FROM payments WHERE id = ?").get(paymentId);
+      if (!paymentRow) {
+        results.push({
+          paymentId,
+          status: "failed",
+          reason: "Payment not found.",
+        });
+        continue;
+      }
+      const payment = serializePayment(paymentRow);
+      if (!payment.complianceResult) {
+        results.push({
+          paymentId: payment.id,
+          status: "failed",
+          reason: "Compliance has not been run.",
+        });
+        continue;
+      }
+      if (payment.complianceResult.decision !== "allow") {
+        results.push({
+          paymentId: payment.id,
+          status: "failed",
+          reason: `Blocked by policy: ${String(payment.complianceResult.decision).toUpperCase()}.`,
+        });
+        continue;
+      }
+
+      try {
+        const execution = await executePaymentOnSolana(payment, mode);
+        const txId = randomId("tx");
+        insertTransactionRecord({
+          transactionId: txId,
+          payment,
+          execution,
+          senderInstitution: req.auth.user.institution,
+          batchId,
+        });
+        db.prepare("UPDATE payments SET status = ?, last_tx_hash = ?, updated_at = ? WHERE id = ?").run(
+          execution.simulated ? "active" : "completed",
+          execution.signature,
+          nowIso(),
+          payment.id
+        );
+
+        if (execution.simulated) {
+          const alertId = randomId("ca");
+          db.prepare(
+            `INSERT INTO compliance_alerts (id, type, severity, message, timestamp, status, transaction_id, payment_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+          ).run(
+            alertId,
+            "kyt",
+            "low",
+            "Batch execution ran in fallback simulation mode due to network constraints.",
+            nowIso(),
+            "investigating",
+            txId,
+            payment.id
+          );
+          alerts.push(serializeAlert(db.prepare("SELECT * FROM compliance_alerts WHERE id = ?").get(alertId)));
+        }
+
+        const event = appendAuditEvent({
+          category: "execution",
+          action: execution.simulated ? "batch_simulated" : "batch_completed_item",
+          message: `Batch ${batchId} execution for "${payment.name}" ${execution.simulated ? "simulated" : "confirmed"} on ${execution.network}.`,
+          paymentId: payment.id,
+          transactionId: txId,
+          userId: req.auth.user.id,
+        });
+        auditEvents.push(event);
+        const transaction = serializeTransaction(db.prepare("SELECT * FROM transactions WHERE id = ?").get(txId));
+        const updatedPayment = serializePayment(db.prepare("SELECT * FROM payments WHERE id = ?").get(payment.id));
+        executedTransactions.push(transaction);
+        updatedPayments.push(updatedPayment);
+        results.push({
+          paymentId: payment.id,
+          status: execution.simulated ? "simulated" : "completed",
+          reason: execution.simulated
+            ? "Executed using simulation fallback."
+            : "Executed and confirmed on-chain.",
+          txHash: execution.signature,
+          network: execution.network,
+          assetType: execution.assetType,
+          tokenMint: execution.tokenMint || null,
+        });
+      } catch (error) {
+        results.push({
+          paymentId: payment.id,
+          status: "failed",
+          reason: error instanceof Error ? error.message : "Execution failed.",
+        });
+      }
+    }
+
+    const summary = {
+      total: uniqueIds.length,
+      completed: results.filter((item) => item.status === "completed").length,
+      simulated: results.filter((item) => item.status === "simulated").length,
+      failed: results.filter((item) => item.status === "failed").length,
+    };
+
+    const batchAuditEvent = appendAuditEvent({
+      category: "execution",
+      action: "batch_completed",
+      message: `Batch ${batchId} finished: ${summary.completed} completed, ${summary.simulated} simulated, ${summary.failed} failed.`,
+      userId: req.auth.user.id,
+    });
+    auditEvents.unshift(batchAuditEvent);
+
+    return res.json({
+      batchId,
+      mode,
+      summary,
+      results,
+      transactions: executedTransactions,
+      payments: updatedPayments,
+      alerts,
+      auditEvents,
+    });
+  }
+);
 
 app.post("/api/compliance/alerts/:id/resolve", requireAuth, requireRole(["admin", "operator"]), (req, res) => {
   const alertRow = db.prepare("SELECT * FROM compliance_alerts WHERE id = ?").get(req.params.id);

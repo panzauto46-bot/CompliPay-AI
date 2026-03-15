@@ -39,6 +39,9 @@ export interface Transaction {
   explorerUrl?: string;
   network?: string;
   simulated?: boolean;
+  assetType?: 'sol' | 'spl' | 'spl-simulated';
+  tokenMint?: string;
+  batchId?: string;
 }
 
 export interface ProgrammablePayment {
@@ -96,4 +99,21 @@ export interface AuditEvent {
   timestamp: Date;
   paymentId?: string;
   transactionId?: string;
+}
+
+export interface BatchExecutionSummary {
+  total: number;
+  completed: number;
+  simulated: number;
+  failed: number;
+}
+
+export interface BatchExecutionResultItem {
+  paymentId: string;
+  status: 'completed' | 'simulated' | 'failed';
+  reason: string;
+  txHash?: string;
+  network?: string;
+  assetType?: Transaction['assetType'];
+  tokenMint?: string | null;
 }
