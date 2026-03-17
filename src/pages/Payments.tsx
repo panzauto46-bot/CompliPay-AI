@@ -98,6 +98,24 @@ export default function Payments() {
     return matchesType && matchesSearch;
   });
 
+  const selectedBatchPayments = useMemo(
+    () => payments.filter((payment) => selectedBatchIds.includes(payment.id)),
+    [payments, selectedBatchIds]
+  );
+
+  const eligibleBatchIds = useMemo(
+    () =>
+      selectedBatchPayments
+        .filter((payment) => payment.complianceResult?.decision === 'allow')
+        .map((payment) => payment.id),
+    [selectedBatchPayments]
+  );
+
+  const ineligibleBatchPayments = useMemo(
+    () => selectedBatchPayments.filter((payment) => payment.complianceResult?.decision !== 'allow'),
+    [selectedBatchPayments]
+  );
+
   const allFilteredSelected =
     filteredPayments.length > 0 && filteredPayments.every((payment) => selectedBatchIds.includes(payment.id));
 
@@ -241,12 +259,38 @@ export default function Payments() {
       setFeedback('Select at least one payment for batch execution.');
       return;
     }
+    if (eligibleBatchIds.length === 0) {
+      const preview = ineligibleBatchPayments
+        .slice(0, 3)
+        .map((payment) => `${payment.name} (${payment.complianceResult?.decision?.toUpperCase() ?? 'NOT CHECKED'})`)
+        .join(', ');
+      setFeedback(
+        `Batch execution only runs for ALLOW payments. ${
+          preview ? `Selected: ${preview}. ` : ''
+        }Run compliance first until decision is ALLOW.`
+      );
+      return;
+    }
+
     setIsExecuting(true);
     try {
-      const response = await executeBatchPayments(selectedBatchIds, 'manual');
-      setFeedback(
-        `Batch ${response.batchId} finished: ${response.summary.completed} completed, ${response.summary.simulated} simulated, ${response.summary.failed} failed.`
-      );
+      const response = await executeBatchPayments(eligibleBatchIds, 'manual');
+      const skippedCount = selectedBatchIds.length - eligibleBatchIds.length;
+      const failedResults = response.results.filter((item) => item.status === 'failed');
+      const failedPreview = failedResults
+        .slice(0, 2)
+        .map((item) => item.reason)
+        .join(' | ');
+      const messageParts = [
+        `Batch ${response.batchId} finished: ${response.summary.completed} completed, ${response.summary.simulated} simulated, ${response.summary.failed} failed.`,
+      ];
+      if (skippedCount > 0) {
+        messageParts.push(`${skippedCount} skipped because status is not ALLOW.`);
+      }
+      if (failedPreview) {
+        messageParts.push(`Reason: ${failedPreview}`);
+      }
+      setFeedback(messageParts.join(' '));
       const completedIds = response.results
         .filter((item) => item.status === 'completed' || item.status === 'simulated')
         .map((item) => item.paymentId);
@@ -335,17 +379,17 @@ export default function Payments() {
               Select all filtered
             </label>
             <span className="text-xs text-slate-400">
-              {selectedBatchIds.length} selected
+              {selectedBatchIds.length} selected • {eligibleBatchIds.length} eligible (ALLOW)
             </span>
           </div>
           <button
             type="button"
             onClick={handleExecuteSelectedBatch}
-            disabled={isExecuting || selectedBatchIds.length === 0}
+            disabled={isExecuting || eligibleBatchIds.length === 0}
             className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
           >
             <Play className="w-4 h-4" />
-            {isExecuting ? 'Running Batch...' : 'Batch Execute Selected'}
+            {isExecuting ? 'Running Batch...' : 'Batch Execute ALLOW'}
           </button>
         </div>
       )}
