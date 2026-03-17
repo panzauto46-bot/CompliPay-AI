@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { ProgrammablePayment } from '../types';
 import { useAppData } from '../context/AppDataContext';
+import { useAuth } from '../context/AuthContext';
 
 type PaymentType = 'all' | 'escrow' | 'milestone' | 'subscription' | 'automated';
 
@@ -60,6 +61,7 @@ function decisionBadge(payment: ProgrammablePayment) {
 }
 
 export default function Payments() {
+  const { user } = useAuth();
   const {
     payments,
     createPayment,
@@ -81,6 +83,7 @@ export default function Payments() {
     paymentId: string;
     message: string;
   } | null>(null);
+  const canOperatePayments = user?.role === 'admin' || user?.role === 'operator';
 
   const selectedPayment = useMemo(
     () => payments.find((payment) => payment.id === selectedPaymentId) ?? null,
@@ -264,13 +267,19 @@ export default function Payments() {
             Create contracts, run compliance, then execute on Solana.
           </p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-600 text-white font-medium rounded-lg transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Create Payment
-        </button>
+        {canOperatePayments ? (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-600 text-white font-medium rounded-lg transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Create Payment
+          </button>
+        ) : (
+          <span className="px-3 py-2 text-xs font-medium rounded-lg bg-slate-800 text-slate-300 border border-slate-700">
+            Viewer mode: read-only
+          </span>
+        )}
       </div>
 
       {feedback && (
@@ -313,31 +322,33 @@ export default function Payments() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-900/70 border border-slate-800 rounded-xl">
-        <div className="flex items-center gap-3">
-          <label className="inline-flex items-center gap-2 text-sm text-slate-300">
-            <input
-              type="checkbox"
-              checked={allFilteredSelected}
-              onChange={handleSelectAllFiltered}
-              className="accent-violet-500"
-            />
-            Select all filtered
-          </label>
-          <span className="text-xs text-slate-400">
-            {selectedBatchIds.length} selected
-          </span>
+      {canOperatePayments && (
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-900/70 border border-slate-800 rounded-xl">
+          <div className="flex items-center gap-3">
+            <label className="inline-flex items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={allFilteredSelected}
+                onChange={handleSelectAllFiltered}
+                className="accent-violet-500"
+              />
+              Select all filtered
+            </label>
+            <span className="text-xs text-slate-400">
+              {selectedBatchIds.length} selected
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleExecuteSelectedBatch}
+            disabled={isExecuting || selectedBatchIds.length === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            <Play className="w-4 h-4" />
+            {isExecuting ? 'Running Batch...' : 'Batch Execute Selected'}
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={handleExecuteSelectedBatch}
-          disabled={isExecuting || selectedBatchIds.length === 0}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
-        >
-          <Play className="w-4 h-4" />
-          {isExecuting ? 'Running Batch...' : 'Batch Execute Selected'}
-        </button>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredPayments.map((payment) => (
@@ -348,17 +359,19 @@ export default function Payments() {
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={selectedBatchIds.includes(payment.id)}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    toggleBatchSelection(payment.id);
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                  className="accent-violet-500"
-                  aria-label={`Select ${payment.name} for batch execution`}
-                />
+                {canOperatePayments && (
+                  <input
+                    type="checkbox"
+                    checked={selectedBatchIds.includes(payment.id)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      toggleBatchSelection(payment.id);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="accent-violet-500"
+                    aria-label={`Select ${payment.name} for batch execution`}
+                  />
+                )}
                 <div className="p-2 bg-slate-800 rounded-lg">{getTypeIcon(payment.type)}</div>
                 <div>
                   <h3 className="font-medium text-white">{payment.name}</h3>
@@ -402,28 +415,32 @@ export default function Payments() {
 
             <div className="mt-4 pt-4 border-t border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRunCompliance(payment.id);
-                  }}
-                  className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-colors"
-                  title="Run compliance"
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAIRecommendation(payment.id);
-                  }}
-                  className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition-colors"
-                  title="AI recommendation"
-                >
-                  <Sparkles className="w-4 h-4" />
-                </button>
+                {canOperatePayments && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRunCompliance(payment.id);
+                      }}
+                      className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-colors"
+                      title="Run compliance"
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAIRecommendation(payment.id);
+                      }}
+                      className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition-colors"
+                      title="AI recommendation"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
                 <button
                   type="button"
                   onClick={(e) => {
@@ -436,17 +453,19 @@ export default function Payments() {
                   <Edit className="w-4 h-4" />
                 </button>
               </div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleExecutePayment(payment.id, 'manual');
-                }}
-                className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-colors"
-                title="Execute now"
-              >
-                <Play className="w-4 h-4" />
-              </button>
+              {canOperatePayments && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleExecutePayment(payment.id, 'manual');
+                  }}
+                  className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-colors"
+                  title="Execute now"
+                >
+                  <Play className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -650,41 +669,51 @@ export default function Payments() {
                 </div>
               )}
 
+              {!canOperatePayments && (
+                <p className="text-xs text-slate-400">
+                  Viewer role hanya dapat melihat detail payment.
+                </p>
+              )}
+
               <div className="flex flex-wrap items-center gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => handleRunCompliance(selectedPayment.id)}
-                  className="flex-1 min-w-[160px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors"
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                  Run Compliance
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleAIRecommendation(selectedPayment.id)}
-                  className="flex-1 min-w-[160px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-medium rounded-lg transition-colors"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  AI Recommend
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleExecutePayment(selectedPayment.id, 'manual')}
-                  disabled={isExecuting}
-                  className="flex-1 min-w-[160px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-600 disabled:opacity-60 text-white font-medium rounded-lg transition-colors"
-                >
-                  <Play className="w-4 h-4" />
-                  {isExecuting ? 'Executing...' : 'Execute Now'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleExecutePayment(selectedPayment.id, 'ai')}
-                  disabled={isExecuting}
-                  className="flex-1 min-w-[160px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-medium rounded-lg transition-colors"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  {isExecuting ? 'Executing...' : 'Execute With AI'}
-                </button>
+                {canOperatePayments && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleRunCompliance(selectedPayment.id)}
+                      className="flex-1 min-w-[160px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors"
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      Run Compliance
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAIRecommendation(selectedPayment.id)}
+                      className="flex-1 min-w-[160px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-medium rounded-lg transition-colors"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      AI Recommend
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleExecutePayment(selectedPayment.id, 'manual')}
+                      disabled={isExecuting}
+                      className="flex-1 min-w-[160px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-600 disabled:opacity-60 text-white font-medium rounded-lg transition-colors"
+                    >
+                      <Play className="w-4 h-4" />
+                      {isExecuting ? 'Executing...' : 'Execute Now'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleExecutePayment(selectedPayment.id, 'ai')}
+                      disabled={isExecuting}
+                      className="flex-1 min-w-[160px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-medium rounded-lg transition-colors"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      {isExecuting ? 'Executing...' : 'Execute With AI'}
+                    </button>
+                  </>
+                )}
                 <button
                   type="button"
                   onClick={() => setSelectedPaymentId(null)}

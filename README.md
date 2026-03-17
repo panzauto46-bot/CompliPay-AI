@@ -1,4 +1,4 @@
-<p align="center">
+﻿<p align="center">
   <img src="https://img.shields.io/badge/Solana-Testnet%20%7C%20Devnet-14F195?style=for-the-badge&logo=solana&logoColor=white" alt="Solana" />
   <img src="https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" />
   <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
@@ -9,19 +9,19 @@
   <img src="https://img.shields.io/badge/AI-Qwen%20Plus-FF6A00?style=for-the-badge&logo=alibaba-cloud&logoColor=white" alt="AI" />
 </p>
 
-<h1 align="center">🏦 CompliPay AI</h1>
+<h1 align="center">ðŸ¦ CompliPay AI</h1>
 
 <p align="center">
   <strong>Institutional-Grade Programmable Stablecoin Payment Infrastructure with Built-in Compliance & AI</strong>
 </p>
 
 <p align="center">
-  Built for <strong>StableHacks 2026</strong> — <em>Programmable Stablecoin Payments</em> Track
+  Built for <strong>StableHacks 2026</strong> â€” <em>Programmable Stablecoin Payments</em> Track
 </p>
 
 ---
 
-## 📋 Table of Contents
+## ðŸ“‹ Table of Contents
 
 - [Overview](#-overview)
 - [Key Features](#-key-features)
@@ -45,17 +45,17 @@
 
 ---
 
-## 🌟 Overview
+## ðŸŒŸ Overview
 
 **CompliPay AI** is a Solana-based institutional payment system that enables **programmable stablecoin payments** with a built-in compliance layer and full auditability. It is designed for regulated institutions that need fast settlement, policy enforcement, and transparent controls.
 
 ### Problem
 
 Institutions handling cross-border value transfer face:
-- ❌ Slow and expensive traditional rails
-- ❌ Fragmented compliance processes
-- ❌ Manual risk operations
-- ❌ Weak real-time transparency for auditors and regulators
+- âŒ Slow and expensive traditional rails
+- âŒ Fragmented compliance processes
+- âŒ Manual risk operations
+- âŒ Weak real-time transparency for auditors and regulators
 
 ### Solution
 
@@ -73,60 +73,60 @@ CompliPay AI combines **fast on-chain settlement** with **strict compliance cont
 
 | Persona | Focus |
 |---|---|
-| 💼 **Treasury Manager** | Fast execution, low cost, FX efficiency |
-| 🛡️ **Compliance Officer** | KYC/KYT/AML validation, regulator-ready audit trail |
-| 📊 **Ops Analyst** | Payment status monitoring, incident handling |
-| 🏛️ **Regulator/Auditor** | Tamper-proof transaction evidence, Travel Rule traceability |
+| ðŸ’¼ **Treasury Manager** | Fast execution, low cost, FX efficiency |
+| ðŸ›¡ï¸ **Compliance Officer** | KYC/KYT/AML validation, regulator-ready audit trail |
+| ðŸ“Š **Ops Analyst** | Payment status monitoring, incident handling |
+| ðŸ›ï¸ **Regulator/Auditor** | Tamper-proof transaction evidence, Travel Rule traceability |
 
 ---
 
-## 🚀 Key Features
+## ðŸš€ Key Features
 
 ### Core Payment Engine
-- ✅ Create programmable payment contracts (Escrow / Milestone / Subscription / Automated)
-- ✅ Define execution conditions and trigger rules
-- ✅ Schedule payments with fallback actions
-- ✅ Full payment lifecycle management (draft → active → completed)
-- ✅ Batch execution for selected payments (`/api/payments/batch-execute`)
+- âœ… Create programmable payment contracts (Escrow / Milestone / Subscription / Automated)
+- âœ… Define execution conditions and trigger rules
+- âœ… Schedule payments with fallback actions
+- âœ… Full payment lifecycle management (draft â†’ active â†’ completed)
+- âœ… Batch execution for selected payments (`/api/payments/batch-execute`)
 
 ### Compliance Engine
-- ✅ **KYC (Know Your Customer)** — Identity/business verification gate
-- ✅ **KYT (Know Your Transaction)** — Transaction behavior/risk scoring
-- ✅ **AML (Anti-Money Laundering)** — Sanctions and illicit finance screening
-- ✅ **Travel Rule** — Sender/receiver metadata compliance for threshold transfers
-- ✅ Deterministic policy decision matrix: `ALLOW` / `REVIEW` / `BLOCK`
-- ✅ External compliance provider connector support
+- âœ… **KYC (Know Your Customer)** â€” Identity/business verification gate
+- âœ… **KYT (Know Your Transaction)** â€” Transaction behavior/risk scoring
+- âœ… **AML (Anti-Money Laundering)** â€” Sanctions and illicit finance screening
+- âœ… **Travel Rule** â€” Sender/receiver metadata compliance for threshold transfers
+- âœ… Deterministic policy decision matrix: `ALLOW` / `REVIEW` / `BLOCK`
+- âœ… External compliance provider connector support
 
 ### AI Assistant
-- ✅ Live Qwen LLM integration via DashScope API
-- ✅ Execution recommendations constrained by policy outcomes
-- ✅ Chat interface for operational guidance
-- ✅ AI cannot bypass compliance policy engine (guardrail enforced)
+- âœ… Live Qwen LLM integration via DashScope API
+- âœ… Execution recommendations constrained by policy outcomes
+- âœ… Chat interface for operational guidance
+- âœ… AI cannot bypass compliance policy engine (guardrail enforced)
 
 ### Blockchain Execution
-- ✅ Real transaction submission on Solana testnet
-- ✅ Automatic fallback to devnet
-- ✅ Explicit simulation fallback with clear labeling
-- ✅ Explorer deep links for every transaction
-- ✅ SPL token transfer flow (USDC/USDT-style mint + transfer on-chain)
-- ✅ On-chain policy memo instruction (Memo Program) attached to execution tx
+- âœ… Real transaction submission on Solana testnet
+- âœ… Automatic fallback to devnet
+- âœ… Explicit simulation fallback with clear labeling
+- âœ… Explorer deep links for every transaction
+- âœ… SPL token transfer flow (USDC/USDT-style mint + transfer on-chain)
+- âœ… On-chain policy memo instruction (Memo Program) attached to execution tx
 
 ### Security & Auth
-- ✅ Session-based authentication with JWT tokens
-- ✅ Role-Based Access Control (Admin / Operator / Viewer)
-- ✅ Rate limiting on sensitive endpoints
-- ✅ SHA-256 password hashing with configurable salt
-- ✅ Security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy)
+- âœ… Session-based authentication with opaque Bearer session tokens
+- âœ… Role-Based Access Control (Admin / Operator / Viewer)
+- âœ… Rate limiting on sensitive endpoints
+- âœ… PBKDF2 password hashing (legacy SHA-256 migration supported)
+- âœ… Security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy)
 
 ### Data Persistence
-- ✅ SQLite database with WAL mode for concurrent access
-- ✅ Append-only audit event storage
-- ✅ Automatic seed data on first run
-- ✅ CSV export for transaction evidence
+- âœ… SQLite database with WAL mode for concurrent access
+- âœ… Append-only audit event storage
+- âœ… Automatic seed data on first run
+- âœ… CSV export for transaction evidence
 
 ---
 
-## 🏗️ System Architecture
+## ðŸ—ï¸ System Architecture
 
 <p align="center">
   <img src="docs/assets/architecture_diagram.png" alt="CompliPay AI - System Architecture" width="780" />
@@ -139,8 +139,8 @@ The frontend is built with **React 19** and **TypeScript**, providing 9 distinct
 
 ### Layer 2: Application Layer (State & Business Logic)
 Two React contexts manage all client-side state:
-- **`AuthContext`** — Authentication, session management, and role enforcement
-- **`AppDataContext`** — Payment lifecycle orchestration, compliance flow, and data synchronization with the backend API
+- **`AuthContext`** â€” Authentication, session management, and role enforcement
+- **`AppDataContext`** â€” Payment lifecycle orchestration, compliance flow, and data synchronization with the backend API
 
 ### Layer 3: Backend API (Node.js + Express)
 A **Node.js server** with Express handles all business logic server-side:
@@ -158,29 +158,29 @@ Payment execution targets the **Solana blockchain** using `@solana/web3.js`:
 3. Final fallback: Generate an explicit **simulation** result with clear labeling
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    PRESENTATION LAYER                           │
-│  Landing │ Dashboard │ Payments │ Compliance │ AI Agent │ ...   │
-├─────────────────────────────────────────────────────────────────┤
-│                    APPLICATION LAYER                             │
-│  AuthContext (Auth)  │  AppDataContext (State Orchestration)     │
-│  CompliancePolicy    │  AI Client (Qwen LLM)                    │
-├─────────────────────────────────────────────────────────────────┤
-│                    BACKEND API LAYER                             │
-│  Auth API │ Payment API │ Compliance API │ AI Proxy │ Audit API │
-│                    ┌──────────────┐                              │
-│                    │   SQLite DB  │                              │
-│                    └──────────────┘                              │
-├─────────────────────────────────────────────────────────────────┤
-│                    BLOCKCHAIN LAYER                              │
-│  Solana Testnet ──→ Devnet Fallback ──→ Simulation Fallback     │
-│                    Solana Explorer Deep Links                    │
-└─────────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                    PRESENTATION LAYER                           â”‚
+â”‚  Landing â”‚ Dashboard â”‚ Payments â”‚ Compliance â”‚ AI Agent â”‚ ...   â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                    APPLICATION LAYER                             â”‚
+â”‚  AuthContext (Auth)  â”‚  AppDataContext (State Orchestration)     â”‚
+â”‚  CompliancePolicy    â”‚  AI Client (Qwen LLM)                    â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                    BACKEND API LAYER                             â”‚
+â”‚  Auth API â”‚ Payment API â”‚ Compliance API â”‚ AI Proxy â”‚ Audit API â”‚
+â”‚                    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”                              â”‚
+â”‚                    â”‚   SQLite DB  â”‚                              â”‚
+â”‚                    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜                              â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚                    BLOCKCHAIN LAYER                              â”‚
+â”‚  Solana Testnet â”€â”€â†’ Devnet Fallback â”€â”€â†’ Simulation Fallback     â”‚
+â”‚                    Solana Explorer Deep Links                    â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ---
 
-## 🔄 Payment Flow
+## ðŸ”„ Payment Flow
 
 <p align="center">
   <img src="docs/assets/payment_flow_diagram.png" alt="CompliPay AI - Payment Flow" width="680" />
@@ -190,49 +190,49 @@ Payment execution targets the **Solana blockchain** using `@solana/web3.js`:
 
 ```
 User creates payment contract
-         │
-         ▼
-┌──────────────────────────┐
-│   COMPLIANCE SCREENING   │
-│  ┌─────┐ ┌─────┐        │
-│  │ KYC │ │ KYT │        │
-│  └─────┘ └─────┘        │
-│  ┌─────┐ ┌────────────┐ │
-│  │ AML │ │Travel Rule │ │
-│  └─────┘ └────────────┘ │
-└──────────┬───────────────┘
-           │
-     ┌─────┼──────────┐
-     ▼     ▼          ▼
+         â”‚
+         â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚   COMPLIANCE SCREENING   â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â” â”Œâ”€â”€â”€â”€â”€â”        â”‚
+â”‚  â”‚ KYC â”‚ â”‚ KYT â”‚        â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”˜ â””â”€â”€â”€â”€â”€â”˜        â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â” â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â” â”‚
+â”‚  â”‚ AML â”‚ â”‚Travel Rule â”‚ â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”˜ â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜ â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+           â”‚
+     â”Œâ”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+     â–¼     â–¼          â–¼
   ALLOW  REVIEW     BLOCK
-     │     │          │
-     ▼     ▼          ▼
+     â”‚     â”‚          â”‚
+     â–¼     â–¼          â–¼
   AI Rec  Manual   Denied
-     │   Approval     │
-     ▼                │
-  Execute             │
-  on Solana           │
-     │                │
-     ▼                ▼
-  ┌─────────────────────┐
-  │    AUDIT TRAIL       │
-  │  (All actions logged │
-  │   with evidence)     │
-  └─────────────────────┘
+     â”‚   Approval     â”‚
+     â–¼                â”‚
+  Execute             â”‚
+  on Solana           â”‚
+     â”‚                â”‚
+     â–¼                â–¼
+  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+  â”‚    AUDIT TRAIL       â”‚
+  â”‚  (All actions logged â”‚
+  â”‚   with evidence)     â”‚
+  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### Decision Flow Details
 
-1. **Create Payment Contract** — User defines payer, beneficiary, token, amount, and conditions
-2. **Run Compliance Screening** — All 4 mandatory checks execute in sequence
-3. **Policy Decision** — Engine returns `ALLOW`, `REVIEW`, or `BLOCK` based on check results
-4. **AI Recommendation** (optional) — LLM suggests optimal execution strategy
-5. **Execute on Solana** — Only `ALLOW` decisions can trigger on-chain execution
-6. **Audit Trail** — Every step is recorded with timestamp, actor, and transaction reference
+1. **Create Payment Contract** â€” User defines payer, beneficiary, token, amount, and conditions
+2. **Run Compliance Screening** â€” All 4 mandatory checks execute in sequence
+3. **Policy Decision** â€” Engine returns `ALLOW`, `REVIEW`, or `BLOCK` based on check results
+4. **AI Recommendation** (optional) â€” LLM suggests optimal execution strategy
+5. **Execute on Solana** â€” Only `ALLOW` decisions can trigger on-chain execution
+6. **Audit Trail** â€” Every step is recorded with timestamp, actor, and transaction reference
 
 ---
 
-## 🛠️ Tech Stack
+## ðŸ› ï¸ Tech Stack
 
 <p align="center">
   <img src="docs/assets/tech_stack_diagram.png" alt="CompliPay AI - Tech Stack" width="680" />
@@ -265,7 +265,7 @@ User creates payment contract
 | Technology | Version | Purpose |
 |---|---|---|
 | @solana/web3.js | 1.98 | Solana blockchain interaction |
-| Solana Testnet/Devnet | — | Transaction submission networks |
+| Solana Testnet/Devnet | â€” | Transaction submission networks |
 
 ### AI/ML
 
@@ -284,105 +284,105 @@ User creates payment contract
 
 ---
 
-## 📁 Project Structure
+## ðŸ“ Project Structure
 
 ```
 CompliPay AI/
-│
-├── 📄 index.html                    # HTML entry point
-├── 📄 package.json                  # Dependencies and scripts
-├── 📄 vite.config.ts                # Vite + React + Tailwind config
-├── 📄 tsconfig.json                 # TypeScript configuration
-├── 📄 .env.example                  # Environment variable template
-├── 📄 .gitignore                    # Git ignore rules
-├── 📄 PRD.md                        # Product Requirements Document
-│
-├── 📂 src/                          # Frontend source code
-│   ├── 📄 main.tsx                  # React app entry point
-│   ├── 📄 App.tsx                   # Router and protected layout
-│   ├── 📄 index.css                 # Global styles and Tailwind imports
-│   │
-│   ├── 📂 pages/                    # Route-level page components
-│   │   ├── 📄 LandingPage.tsx       # Public marketing/pitch landing page
-│   │   ├── 📄 LandingPage.css       # Landing page custom styles
-│   │   ├── 📄 Login.tsx             # Authentication login form
-│   │   ├── 📄 Dashboard.tsx         # Operational KPI dashboard with charts
-│   │   ├── 📄 Payments.tsx          # Programmable payment workflow UI
-│   │   ├── 📄 Compliance.tsx        # Compliance monitoring & alert handling
-│   │   ├── 📄 AIAgent.tsx           # AI assistant chat & automation tasks
-│   │   ├── 📄 AuditTrail.tsx        # Filterable operational audit events
-│   │   ├── 📄 Transactions.tsx      # Transaction evidence & export
-│   │   ├── 📄 Wallets.tsx           # Institutional wallet management
-│   │   └── 📄 Settings.tsx          # Profile, KYC, security, API settings
-│   │
-│   ├── 📂 components/               # Shared UI components
-│   │   ├── 📄 Layout.tsx            # Sidebar navigation + header layout
-│   │   └── 📄 StatCard.tsx          # Reusable KPI stat card
-│   │
-│   ├── 📂 context/                  # React context providers
-│   │   ├── 📄 AuthContext.tsx       # Authentication state & session
-│   │   └── 📄 AppDataContext.tsx    # App-wide data orchestration
-│   │
-│   ├── 📂 lib/                      # Core business logic
-│   │   ├── 📄 api.ts               # HTTP client with auth token mgmt
-│   │   ├── 📄 aiClient.ts          # AI chat API client
-│   │   ├── 📄 compliancePolicy.ts  # Deterministic compliance engine
-│   │   └── 📄 solanaExecutor.ts    # Solana blockchain executor
-│   │
-│   ├── 📂 types/                    # TypeScript type definitions
-│   │   └── 📄 index.ts             # All shared interfaces
-│   │
-│   ├── 📂 data/                     # Mock/seed data
-│   │   └── 📄 mockData.ts          # Demo scenario seed data
-│   │
-│   └── 📂 utils/                    # Utility functions
-│       └── 📄 cn.ts                # clsx + tailwind-merge helper
-│
-├── 📂 server/                       # Backend API server
-│   ├── 📄 server.js                 # Express server (1100+ lines)
-│   │                                # - Auth (login/logout/session)
-│   │                                # - Payment CRUD & lifecycle
-│   │                                # - Compliance evaluation
-│   │                                # - AI chat proxy
-│   │                                # - Solana execution
-│   │                                # - Audit event logging
-│   │                                # - Wallet management
-│   │                                # - Rate limiting & RBAC
-│   │
-│   └── 📂 data/                     # Database storage
-│       └── 📄 complipay.db          # SQLite database (auto-created)
-│
-├── 📂 design-system/                # Design tokens
-│   └── 📄 tokens.css                # CSS custom properties & base styles
-│
-├── 📂 prototype/                    # Interactive one-page prototype
-│   ├── 📄 index.html                # Prototype HTML structure
-│   ├── 📄 styles.css                # Prototype CSS styling
-│   └── 📄 app.js                    # Prototype interaction simulation
-│
-├── 📂 docs/                         # Project documentation
-│   ├── 📄 ARCHITECTURE.md           # Architecture & data-flow details
-│   ├── 📄 ROADMAP.md                # Phase-by-phase delivery tracker
-│   ├── 📄 DEMO_RUNBOOK.md           # Live demo script (3 minutes)
-│   ├── 📄 SUBMISSION_CHECKLIST.md   # Pre-submit checklist
-│   ├── 📄 UI_UX_DESIGN.md           # UI/UX design blueprint
-│   ├── 📄 PROJECT_AUDIT_REPORT.md   # Code audit report
-│   └── 📂 assets/                   # Architecture diagrams & images
-│       ├── 📄 architecture_diagram.png
-│       ├── 📄 payment_flow_diagram.png
-│       └── 📄 tech_stack_diagram.png
-│
-└── 📂 dist/                         # Production build output
+â”‚
+â”œâ”€â”€ ðŸ“„ index.html                    # HTML entry point
+â”œâ”€â”€ ðŸ“„ package.json                  # Dependencies and scripts
+â”œâ”€â”€ ðŸ“„ vite.config.ts                # Vite + React + Tailwind config
+â”œâ”€â”€ ðŸ“„ tsconfig.json                 # TypeScript configuration
+â”œâ”€â”€ ðŸ“„ .env.example                  # Environment variable template
+â”œâ”€â”€ ðŸ“„ .gitignore                    # Git ignore rules
+â”œâ”€â”€ ðŸ“„ PRD.md                        # Product Requirements Document
+â”‚
+â”œâ”€â”€ ðŸ“‚ src/                          # Frontend source code
+â”‚   â”œâ”€â”€ ðŸ“„ main.tsx                  # React app entry point
+â”‚   â”œâ”€â”€ ðŸ“„ App.tsx                   # Router and protected layout
+â”‚   â”œâ”€â”€ ðŸ“„ index.css                 # Global styles and Tailwind imports
+â”‚   â”‚
+â”‚   â”œâ”€â”€ ðŸ“‚ pages/                    # Route-level page components
+â”‚   â”‚   â”œâ”€â”€ ðŸ“„ LandingPage.tsx       # Public marketing/pitch landing page
+â”‚   â”‚   â”œâ”€â”€ ðŸ“„ LandingPage.css       # Landing page custom styles
+â”‚   â”‚   â”œâ”€â”€ ðŸ“„ Login.tsx             # Authentication login form
+â”‚   â”‚   â”œâ”€â”€ ðŸ“„ Dashboard.tsx         # Operational KPI dashboard with charts
+â”‚   â”‚   â”œâ”€â”€ ðŸ“„ Payments.tsx          # Programmable payment workflow UI
+â”‚   â”‚   â”œâ”€â”€ ðŸ“„ Compliance.tsx        # Compliance monitoring & alert handling
+â”‚   â”‚   â”œâ”€â”€ ðŸ“„ AIAgent.tsx           # AI assistant chat & automation tasks
+â”‚   â”‚   â”œâ”€â”€ ðŸ“„ AuditTrail.tsx        # Filterable operational audit events
+â”‚   â”‚   â”œâ”€â”€ ðŸ“„ Transactions.tsx      # Transaction evidence & export
+â”‚   â”‚   â”œâ”€â”€ ðŸ“„ Wallets.tsx           # Institutional wallet management
+â”‚   â”‚   â””â”€â”€ ðŸ“„ Settings.tsx          # Profile, KYC, security, API settings
+â”‚   â”‚
+â”‚   â”œâ”€â”€ ðŸ“‚ components/               # Shared UI components
+â”‚   â”‚   â”œâ”€â”€ ðŸ“„ Layout.tsx            # Sidebar navigation + header layout
+â”‚   â”‚   â””â”€â”€ ðŸ“„ StatCard.tsx          # Reusable KPI stat card
+â”‚   â”‚
+â”‚   â”œâ”€â”€ ðŸ“‚ context/                  # React context providers
+â”‚   â”‚   â”œâ”€â”€ ðŸ“„ AuthContext.tsx       # Authentication state & session
+â”‚   â”‚   â””â”€â”€ ðŸ“„ AppDataContext.tsx    # App-wide data orchestration
+â”‚   â”‚
+â”‚   â”œâ”€â”€ ðŸ“‚ lib/                      # Core business logic
+â”‚   â”‚   â”œâ”€â”€ ðŸ“„ api.ts               # HTTP client with auth token mgmt
+â”‚   â”‚   â”œâ”€â”€ ðŸ“„ aiClient.ts          # AI chat API client
+â”‚   â”‚   â”œâ”€â”€ ðŸ“„ compliancePolicy.ts  # Deterministic compliance engine
+â”‚   â”‚   â””â”€â”€ ðŸ“„ solanaExecutor.ts    # Solana blockchain executor
+â”‚   â”‚
+â”‚   â”œâ”€â”€ ðŸ“‚ types/                    # TypeScript type definitions
+â”‚   â”‚   â””â”€â”€ ðŸ“„ index.ts             # All shared interfaces
+â”‚   â”‚
+â”‚   â”œâ”€â”€ ðŸ“‚ data/                     # Mock/seed data
+â”‚   â”‚   â””â”€â”€ ðŸ“„ mockData.ts          # Demo scenario seed data
+â”‚   â”‚
+â”‚   â””â”€â”€ ðŸ“‚ utils/                    # Utility functions
+â”‚       â””â”€â”€ ðŸ“„ cn.ts                # clsx + tailwind-merge helper
+â”‚
+â”œâ”€â”€ ðŸ“‚ server/                       # Backend API server
+â”‚   â”œâ”€â”€ ðŸ“„ server.js                 # Express server (1100+ lines)
+â”‚   â”‚                                # - Auth (login/logout/session)
+â”‚   â”‚                                # - Payment CRUD & lifecycle
+â”‚   â”‚                                # - Compliance evaluation
+â”‚   â”‚                                # - AI chat proxy
+â”‚   â”‚                                # - Solana execution
+â”‚   â”‚                                # - Audit event logging
+â”‚   â”‚                                # - Wallet management
+â”‚   â”‚                                # - Rate limiting & RBAC
+â”‚   â”‚
+â”‚   â””â”€â”€ ðŸ“‚ data/                     # Database storage
+â”‚       â””â”€â”€ ðŸ“„ complipay.db          # SQLite database (auto-created)
+â”‚
+â”œâ”€â”€ ðŸ“‚ design-system/                # Design tokens
+â”‚   â””â”€â”€ ðŸ“„ tokens.css                # CSS custom properties & base styles
+â”‚
+â”œâ”€â”€ ðŸ“‚ prototype/                    # Interactive one-page prototype
+â”‚   â”œâ”€â”€ ðŸ“„ index.html                # Prototype HTML structure
+â”‚   â”œâ”€â”€ ðŸ“„ styles.css                # Prototype CSS styling
+â”‚   â””â”€â”€ ðŸ“„ app.js                    # Prototype interaction simulation
+â”‚
+â”œâ”€â”€ ðŸ“‚ docs/                         # Project documentation
+â”‚   â”œâ”€â”€ ðŸ“„ ARCHITECTURE.md           # Architecture & data-flow details
+â”‚   â”œâ”€â”€ ðŸ“„ ROADMAP.md                # Phase-by-phase delivery tracker
+â”‚   â”œâ”€â”€ ðŸ“„ DEMO_RUNBOOK.md           # Live demo script (3 minutes)
+â”‚   â”œâ”€â”€ ðŸ“„ SUBMISSION_CHECKLIST.md   # Pre-submit checklist
+â”‚   â”œâ”€â”€ ðŸ“„ UI_UX_DESIGN.md           # UI/UX design blueprint
+â”‚   â”œâ”€â”€ ðŸ“„ PROJECT_AUDIT_REPORT.md   # Code audit report
+â”‚   â””â”€â”€ ðŸ“‚ assets/                   # Architecture diagrams & images
+â”‚       â”œâ”€â”€ ðŸ“„ architecture_diagram.png
+â”‚       â”œâ”€â”€ ðŸ“„ payment_flow_diagram.png
+â”‚       â””â”€â”€ ðŸ“„ tech_stack_diagram.png
+â”‚
+â””â”€â”€ ðŸ“‚ dist/                         # Production build output
 ```
 
 ---
 
-## ⚡ Getting Started
+## âš¡ Getting Started
 
 ### Prerequisites
 
-- **Node.js** ≥ 22.0 (required for native `node:sqlite` module)
-- **npm** ≥ 9.0
+- **Node.js** â‰¥ 22.0 (required for native `node:sqlite` module)
+- **npm** â‰¥ 9.0
 
 ### Installation
 
@@ -426,32 +426,37 @@ npm run dev
 
 ---
 
-## 🔐 Environment Variables
+## ðŸ” Environment Variables
 
 Copy `.env.example` to `.env` and configure:
 
 ```env
-# ─── Server Configuration ─────────────────────────────────
+# â”€â”€â”€ Server Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 SERVER_PORT=8787                         # API server port
 SESSION_TTL_HOURS=24                     # Session duration
-AUTH_PASSWORD_SALT=change-this-salt      # Password hashing salt
+AUTH_PASSWORD_SALT=change-this-salt      # Legacy fallback salt for old hashes
+AUTH_PBKDF2_ITERATIONS=210000            # PBKDF2 iteration count
+SESSION_TOKEN_PEPPER=change-this-session-pepper  # Pepper used to hash session tokens at rest
+TRUST_PROXY=false                        # Explicit proxy trust control
 
-# ─── AI Configuration (Required for AI features) ──────────
+# â”€â”€â”€ AI Configuration (Required for AI features) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 DASHSCOPE_API_KEY=your_key_here          # Alibaba DashScope API key
 # MODEL_STUDIO_API_KEY=                  # Alternative key name
 AI_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
 AI_MODEL=qwen-plus                       # LLM model name
 AI_SYSTEM_PROMPT=...                     # Custom system prompt (optional)
 
-# ─── Compliance Provider (Optional) ───────────────────────
+# â”€â”€â”€ Compliance Provider (Optional) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 COMPLIANCE_PROVIDER_URL=                 # External compliance API endpoint
 COMPLIANCE_PROVIDER_KEY=                 # External compliance API key
 
-# ─── Solana Configuration (Optional) ──────────────────────
+# â”€â”€â”€ Solana Configuration (Optional) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 SOLANA_WALLET_CLUSTER=devnet             # Wallet balance query cluster
 SOLANA_RPC_ENDPOINT=                     # Custom RPC endpoint override
+USDC_TOKEN_MINT=                         # Optional mint for USDC SPL balance refresh
+USDT_TOKEN_MINT=                         # Optional mint for USDT SPL balance refresh
 
-# ─── SPL Execution Tuning (Optional) ──────────────────────
+# â”€â”€â”€ SPL Execution Tuning (Optional) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 SPL_DEFAULT_DECIMALS=6                   # Decimals used for demo SPL mint
 MEMO_PROGRAM_ID=MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr
 ```
@@ -460,61 +465,61 @@ MEMO_PROGRAM_ID=MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr
 
 ---
 
-## 📡 API Reference
+## ðŸ“¡ API Reference
 
 ### Authentication
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| `POST` | `/api/auth/login` | ❌ | Login with email/password → returns JWT token |
-| `GET` | `/api/auth/me` | ✅ | Get current authenticated user |
-| `POST` | `/api/auth/logout` | ✅ | Invalidate current session |
+| `POST` | `/api/auth/login` | âŒ | Login with email/password â†’ returns Bearer session token |
+| `GET` | `/api/auth/me` | âœ… | Get current authenticated user |
+| `POST` | `/api/auth/logout` | âœ… | Invalidate current session |
 
 ### Payments
 
 | Method | Endpoint | Auth | Roles | Description |
 |---|---|---|---|---|
-| `POST` | `/api/payments` | ✅ | admin, operator | Create new payment contract |
-| `POST` | `/api/payments/:id/compliance` | ✅ | admin, operator | Run compliance checks |
-| `POST` | `/api/payments/:id/ai-recommendation` | ✅ | admin, operator | Request AI execution recommendation |
-| `POST` | `/api/payments/:id/execute` | ✅ | admin, operator | Execute payment on Solana |
-| `POST` | `/api/payments/batch-execute` | ✅ | admin, operator | Execute multiple policy-allowed payments in one batch |
+| `POST` | `/api/payments` | âœ… | admin, operator | Create new payment contract |
+| `POST` | `/api/payments/:id/compliance` | âœ… | admin, operator | Run compliance checks |
+| `POST` | `/api/payments/:id/ai-recommendation` | âœ… | admin, operator | Request AI execution recommendation |
+| `POST` | `/api/payments/:id/execute` | âœ… | admin, operator | Execute payment on Solana |
+| `POST` | `/api/payments/batch-execute` | âœ… | admin, operator | Execute multiple policy-allowed payments in one batch |
 
 ### Compliance
 
 | Method | Endpoint | Auth | Roles | Description |
 |---|---|---|---|---|
-| `POST` | `/api/compliance/alerts/:id/resolve` | ✅ | admin, operator | Resolve a compliance alert |
+| `POST` | `/api/compliance/alerts/:id/resolve` | âœ… | admin, operator | Resolve a compliance alert |
 
 ### Wallets
 
 | Method | Endpoint | Auth | Roles | Description |
 |---|---|---|---|---|
-| `POST` | `/api/wallets/refresh` | ✅ | admin, operator | Refresh wallet balances from RPC |
+| `POST` | `/api/wallets/refresh` | âœ… | admin, operator | Refresh wallet balances from RPC |
 
 ### AI
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| `POST` | `/api/ai/chat` | ✅ | Send message to AI assistant |
+| `POST` | `/api/ai/chat` | âœ… | Send message to AI assistant |
 
 ### System
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| `GET` | `/api/health` | ❌ | Health check and configuration status |
-| `GET` | `/api/bootstrap` | ✅ | Load all initial app data in one request |
+| `GET` | `/api/health` | âŒ | Health check and configuration status |
+| `GET` | `/api/bootstrap` | âœ… | Load all initial app data in one request |
 
 ---
 
-## 🗄️ Database Schema
+## ðŸ—„ï¸ Database Schema
 
 CompliPay AI uses **SQLite** with **WAL (Write-Ahead Logging)** mode for optimal concurrent read performance.
 
 ```sql
 -- Core tables
 users              -- Institutional user accounts with roles
-sessions           -- JWT session tokens with TTL
+sessions           -- Opaque session token hashes with TTL
 payments           -- Programmable payment contracts
 transactions       -- Executed transaction records
 compliance_alerts  -- Compliance check alerts
@@ -526,12 +531,12 @@ audit_events       -- Append-only audit event log
 ### Entity Relationship
 
 ```
-users ──1:N──→ sessions
-payments ──1:1──→ compliance_result (JSON)
-payments ──1:N──→ compliance_alerts
-payments ──1:N──→ transactions
-transactions ──→ audit_events (referenced by ID)
-payments ──→ audit_events (referenced by ID)
+users â”€â”€1:Nâ”€â”€â†’ sessions
+payments â”€â”€1:1â”€â”€â†’ compliance_result (JSON)
+payments â”€â”€1:Nâ”€â”€â†’ compliance_alerts
+payments â”€â”€1:Nâ”€â”€â†’ transactions
+transactions â”€â”€â†’ audit_events (referenced by ID)
+payments â”€â”€â†’ audit_events (referenced by ID)
 ```
 
 ### Key Schema Details
@@ -548,7 +553,7 @@ payments ──→ audit_events (referenced by ID)
 
 ---
 
-## 🔑 Demo Credentials
+## ðŸ”‘ Demo Credentials
 
 | Role | Email | Password | Permissions |
 |---|---|---|---|
@@ -558,43 +563,43 @@ payments ──→ audit_events (referenced by ID)
 
 ---
 
-## 🎬 Core Demo Flow (3 Minutes)
+## ðŸŽ¬ Core Demo Flow (3 Minutes)
 
 ```
-Step 1 ─→ Open Landing Page and click "Launch Dashboard"
-Step 2 ─→ Login with admin@complipay.ai / Admin123!
-Step 3 ─→ View Dashboard KPIs and operational metrics
-Step 4 ─→ Navigate to "Payments" and create a new programmable payment
-Step 5 ─→ Run Compliance Checks (see ALLOW / REVIEW / BLOCK decision)
-Step 6 ─→ Request AI Recommendation for the payment
-Step 7 ─→ Execute payment (click "Execute Now" or "Execute With AI")
-Step 8 ─→ Navigate to "Transactions" — verify tx hash and explorer link
-Step 9 ─→ Navigate to "Audit Trail" — review all logged events
-Step 10 ─→ Show Compliance Center alerts and resolution workflow
+Step 1 â”€â†’ Open Landing Page and click "Launch Dashboard"
+Step 2 â”€â†’ Login with admin@complipay.ai / Admin123!
+Step 3 â”€â†’ View Dashboard KPIs and operational metrics
+Step 4 â”€â†’ Navigate to "Payments" and create a new programmable payment
+Step 5 â”€â†’ Run Compliance Checks (see ALLOW / REVIEW / BLOCK decision)
+Step 6 â”€â†’ Request AI Recommendation for the payment
+Step 7 â”€â†’ Execute payment (click "Execute Now" or "Execute With AI")
+Step 8 â”€â†’ Navigate to "Transactions" â€” verify tx hash and explorer link
+Step 9 â”€â†’ Navigate to "Audit Trail" â€” review all logged events
+Step 10 â”€â†’ Show Compliance Center alerts and resolution workflow
 ```
 
-> 📖 For the full demo script, see [`docs/DEMO_RUNBOOK.md`](docs/DEMO_RUNBOOK.md)
+> ðŸ“– For the full demo script, see [`docs/DEMO_RUNBOOK.md`](docs/DEMO_RUNBOOK.md)
 
 ---
 
-## 🛡️ Compliance Decision Matrix
+## ðŸ›¡ï¸ Compliance Decision Matrix
 
 ### Mandatory Checks
 
 | Check | Input | Pass Condition | Fail Condition |
 |---|---|---|---|
-| **KYC** | `recipientKycVerified` | Recipient is verified | Recipient not verified → `BLOCK` |
-| **KYT** | `amount` | Amount ≤ $500,000 | Amount > $500,000 → `REVIEW` |
-| **AML** | `recipient` name | No sanction match | Name contains "sanction"/"blocked" → `BLOCK` |
-| **Travel Rule** | `amount` + `travelRuleReady` | Amount ≤ $250K OR metadata ready | Amount > $250K + incomplete → `REVIEW` |
+| **KYC** | `recipientKycVerified` | Recipient is verified | Recipient not verified â†’ `BLOCK` |
+| **KYT** | `amount` | Amount â‰¤ $500,000 | Amount > $500,000 â†’ `REVIEW` |
+| **AML** | `recipient` name | No sanction match | Name contains "sanction"/"blocked" â†’ `BLOCK` |
+| **Travel Rule** | `amount` + `travelRuleReady` | Amount â‰¤ $250K OR metadata ready | Amount > $250K + incomplete â†’ `REVIEW` |
 
 ### Decision Logic
 
 | Condition | Decision | Action |
 |---|---|---|
-| All checks `pass` | ✅ **ALLOW** | Payment can be executed automatically |
-| Any check `review` (no `fail`) | ⚠️ **REVIEW** | Manual approval required |
-| Any check `fail` | 🚫 **BLOCK** | Execution denied until resolved |
+| All checks `pass` | âœ… **ALLOW** | Payment can be executed automatically |
+| Any check `review` (no `fail`) | âš ï¸ **REVIEW** | Manual approval required |
+| Any check `fail` | ðŸš« **BLOCK** | Execution denied until resolved |
 
 ### Scoring System
 
@@ -608,18 +613,19 @@ Step 10 ─→ Show Compliance Center alerts and resolution workflow
 
 ---
 
-## 🔒 Security & Guardrails
+## ðŸ”’ Security & Guardrails
 
 ### Authentication & Authorization
-- **Session-based auth** with UUID tokens stored in SQLite
-- **RBAC enforcement** on all mutation endpoints (admin, operator, viewer)
-- **Rate limiting** on login endpoint (20 requests/minute per IP)
-- **SHA-256 password hashing** with configurable salt
+- **Session-based auth** with hashed session tokens in SQLite (raw token never stored)
+- **RBAC enforcement** on mutation endpoints (admin/operator); viewer is read-only in UI
+- **Rate limiting** on sensitive endpoints (IP-based login, user+IP for authenticated AI chat)
+- **PBKDF2 password hashing** with auto-migration support from legacy SHA-256 hashes
+- **Explicit proxy trust configuration** via `TRUST_PROXY` for safer IP-based controls
 
 ### Compliance Guardrails
-- **Policy engine is authoritative** — executions blocked unless `decision === 'allow'`
-- **AI cannot bypass compliance** — recommendations are advisory only
-- **Append-only audit log** — all actions recorded immutably
+- **Policy engine is authoritative** â€” executions blocked unless `decision === 'allow'`
+- **AI cannot bypass compliance** â€” recommendations are advisory only
+- **Append-only audit log** â€” all actions recorded immutably
 
 ### Security Headers
 ```
@@ -635,14 +641,14 @@ Referrer-Policy: no-referrer
 
 ---
 
-## 📱 Pages Overview
+## ðŸ“± Pages Overview
 
 | # | Page | Route | Description |
 |---|---|---|---|
 | 1 | **Landing** | `/` | Public marketing page with hackathon pitch |
 | 2 | **Login** | `/login` | Secure login with role-based session |
 | 3 | **Dashboard** | `/dashboard` | KPI cards, volume charts, compliance metrics |
-| 4 | **Payments** | `/payments` | Full payment lifecycle: create → comply → execute |
+| 4 | **Payments** | `/payments` | Full payment lifecycle: create â†’ comply â†’ execute |
 | 5 | **Compliance** | `/compliance` | Alert monitoring, resolution, and metrics |
 | 6 | **AI Agent** | `/ai-agent` | Chat-based AI assistant + task automation |
 | 7 | **Audit Trail** | `/audit-trail` | Filterable evidence log with timestamps |
@@ -652,45 +658,45 @@ Referrer-Policy: no-referrer
 
 ---
 
-## 📊 Roadmap & Status
+## ðŸ“Š Roadmap & Status
 
 ### Overall Production Readiness: **86%**
 
 | Phase | Weight | Progress | Description |
 |---|---|---|---|
-| Scope & Setup | 15% | 🟢 95% | Scope locked, fullstack runtime stable |
-| Core Payment | 20% | 🟢 100% | API-backed, SPL execution path, and batch execution are implemented |
-| Compliance Engine | 20% | 🟡 75% | Policy logic persistent, external provider connector ready |
-| Audit Trail | 15% | 🟢 80% | Persisted and shown in filterable UI |
-| AI Guardrails | 12% | 🟡 78% | Live LLM chat with policy constraint |
-| UI/UX Polish | 10% | 🟢 90% | Strong presentation quality |
-| Submission Assets | 8% | 🟡 74% | Core docs ready, final assets pending |
+| Scope & Setup | 15% | ðŸŸ¢ 100% | Scope locked, fullstack runtime stable |
+| Core Payment | 20% | ðŸŸ¢ 100% | API-backed, SPL execution path, and batch execution are implemented |
+| Compliance Engine | 20% | ðŸŸ¡ 80% | Policy logic persistent, external provider connector ready |
+| Audit Trail | 15% | ðŸŸ¢ 82% | Persisted and shown in filterable UI |
+| AI Guardrails | 12% | ðŸŸ¡ 80% | Live LLM chat with policy constraint |
+| UI/UX Polish | 10% | ðŸŸ¢ 90% | Strong presentation quality |
+| Submission Assets | 8% | ðŸŸ¡ 76% | Core docs ready, final assets pending |
 
 ### Page-by-Page Status
 
 | Page | Status | Notes |
 |---|---|---|
-| Landing `/` | 🟢 95% | Near-final visual delivery |
-| Dashboard `/dashboard` | 🟡 78% | Persistent API state consumption |
-| Payments `/payments` | 🟢 90% | Full API-backed lifecycle + multi-select batch execution |
-| Compliance `/compliance` | 🟡 75% | Persistent alerts and resolution |
-| AI Agent `/ai-agent` | 🟢 80% | Live Qwen chat integrated |
-| Audit Trail `/audit-trail` | 🟡 78% | Append-only persistent logs |
-| Transactions `/transactions` | 🟡 76% | Pagination and export available |
-| Wallets `/wallets` | 🟡 65% | API-backed with RPC refresh |
-| Settings `/settings` | 🟡 60% | Auth-aware, full persistence pending |
+| Landing `/` | ðŸŸ¢ 95% | Near-final visual delivery |
+| Dashboard `/dashboard` | ðŸŸ¡ 80% | Persistent API state consumption |
+| Payments `/payments` | ðŸŸ¢ 92% | Full API-backed lifecycle + multi-select batch execution |
+| Compliance `/compliance` | ðŸŸ¡ 80% | Persistent alerts and resolution |
+| AI Agent `/ai-agent` | ðŸŸ¢ 82% | Live Qwen chat integrated |
+| Audit Trail `/audit-trail` | ðŸŸ¡ 80% | Append-only persistent logs |
+| Transactions `/transactions` | ðŸŸ¡ 78% | Pagination and export available |
+| Wallets `/wallets` | ðŸŸ¡ 70% | API-backed with RPC refresh |
+| Settings `/settings` | ðŸŸ¡ 60% | Auth-aware, full persistence pending |
 
 ### Post-Hackathon Plan
 
 | Phase | Goal |
 |---|---|
-| **Phase A** — Hardening | Integration tests, fault handling, RBAC expansion |
-| **Phase B** — Pilot Readiness | Real compliance providers, custody workflows, audit export |
-| **Phase C** — Demo Day | Performance optimization, pitch deck, judge Q&A prep |
+| **Phase A** â€” Hardening | Integration tests, fault handling, RBAC expansion |
+| **Phase B** â€” Pilot Readiness | Real compliance providers, custody workflows, audit export |
+| **Phase C** â€” Demo Day | Performance optimization, pitch deck, judge Q&A prep |
 
 ---
 
-## 📚 Documentation
+## ðŸ“š Documentation
 
 | Document | Path | Description |
 |---|---|---|
@@ -698,13 +704,15 @@ Referrer-Policy: no-referrer
 | Architecture | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System architecture and data-flow details |
 | Roadmap | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Phase-by-phase delivery tracker with progress |
 | Demo Runbook | [`docs/DEMO_RUNBOOK.md`](docs/DEMO_RUNBOOK.md) | Step-by-step live demo script (3 minutes) |
+| Security Rollout Runbook | [`docs/SECURITY_ROLLOUT_RUNBOOK.md`](docs/SECURITY_ROLLOUT_RUNBOOK.md) | Production rollout, migration, and rollback guidance for auth/security hardening |
 | Submission Checklist | [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md) | Pre-submit verification checklist |
 | UI/UX Design | [`docs/UI_UX_DESIGN.md`](docs/UI_UX_DESIGN.md) | UI/UX design blueprint and screen specs |
 | Audit Report | [`docs/PROJECT_AUDIT_REPORT.md`](docs/PROJECT_AUDIT_REPORT.md) | Comprehensive code audit findings |
+| Completion Audit | [`docs/PROJECT_COMPLETION_AUDIT.md`](docs/PROJECT_COMPLETION_AUDIT.md) | Weighted production-readiness completion audit |
 
 ---
 
-## 🤝 Contributing
+## ðŸ¤ Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/your-feature`
@@ -721,33 +729,34 @@ Referrer-Policy: no-referrer
 
 ---
 
-## 📝 License
+## ðŸ“ License
 
 This project was built for **StableHacks 2026** hackathon submission.
 
 ---
 
-## 🏆 Hackathon Context
+## ðŸ† Hackathon Context
 
 | Detail | Value |
 |---|---|
 | **Event** | StableHacks 2026 |
 | **Platform** | DoraHacks (fully online) |
 | **Track** | Programmable Stablecoin Payments |
-| **Period** | March 13 – March 22, 2026 |
+| **Period** | March 13 â€“ March 22, 2026 |
 | **Demo Day** | Zurich, May 28, 2026 (Top 10) |
 
 ### Required Submission Artifacts
-- ✅ Public GitHub repository
-- ✅ Project name, team members, country
-- ⬜ Loom video (≤ 3 minutes)
-- ⬜ Testnet demo link
-- ⬜ Final submission on DoraHacks
+- âœ… Public GitHub repository
+- âœ… Project name, team members, country
+- â¬œ Loom video (â‰¤ 3 minutes)
+- â¬œ Testnet demo link
+- â¬œ Final submission on DoraHacks
 
 ---
 
 <p align="center">
-  <strong>Built with ❤️ for StableHacks 2026</strong>
+  <strong>Built with â¤ï¸ for StableHacks 2026</strong>
   <br />
   <em>Programmable. Compliant. Auditable.</em>
 </p>
+

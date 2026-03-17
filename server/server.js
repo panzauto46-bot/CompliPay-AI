@@ -21,6 +21,7 @@ import {
   createTransferCheckedInstruction,
   getOrCreateAssociatedTokenAccount,
   mintTo,
+  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 
 dotenv.config();
@@ -31,6 +32,11 @@ const __dirname = path.dirname(__filename);
 const SERVER_PORT = Number(process.env.SERVER_PORT || 8787);
 const SESSION_TTL_HOURS = Number(process.env.SESSION_TTL_HOURS || 24);
 const PASSWORD_SALT = process.env.AUTH_PASSWORD_SALT || "complipay-demo-salt";
+const SESSION_TOKEN_PEPPER = process.env.SESSION_TOKEN_PEPPER || PASSWORD_SALT;
+const PBKDF2_ITERATIONS = (() => {
+  const raw = Number(process.env.AUTH_PBKDF2_ITERATIONS || 210_000);
+  return Number.isInteger(raw) && raw >= 120_000 ? raw : 210_000;
+})();
 const AI_API_KEY = process.env.DASHSCOPE_API_KEY || process.env.MODEL_STUDIO_API_KEY || "";
 const AI_BASE_URL = process.env.AI_BASE_URL || "https://dashscope-intl.aliyuncs.com/compatible-mode/v1";
 const AI_MODEL = process.env.AI_MODEL || "qwen-plus";
@@ -39,8 +45,11 @@ const AI_SYSTEM_PROMPT =
   "You are CompliPay AI assistant for institutional stablecoin operations. Provide concise, compliant guidance focused on KYC, KYT, AML, Travel Rule, settlement, and auditability.";
 const COMPLIANCE_PROVIDER_URL = process.env.COMPLIANCE_PROVIDER_URL || "";
 const COMPLIANCE_PROVIDER_KEY = process.env.COMPLIANCE_PROVIDER_KEY || "";
+const TRUST_PROXY = process.env.TRUST_PROXY;
 const SOLANA_WALLET_CLUSTER = process.env.SOLANA_WALLET_CLUSTER || "devnet";
 const SOLANA_RPC_ENDPOINT = process.env.SOLANA_RPC_ENDPOINT || "";
+const USDC_TOKEN_MINT = process.env.USDC_TOKEN_MINT || "";
+const USDT_TOKEN_MINT = process.env.USDT_TOKEN_MINT || "";
 const SPL_DEFAULT_DECIMALS = Number(process.env.SPL_DEFAULT_DECIMALS || 6);
 const MEMO_PROGRAM_ID = new PublicKey(
   process.env.MEMO_PROGRAM_ID || "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
@@ -173,8 +182,59 @@ function randomId(prefix) {
   return `${prefix}-${crypto.randomBytes(5).toString("hex")}`;
 }
 
-function hashPassword(password) {
+function secureEqual(left, right) {
+  const a = Buffer.from(String(left), "utf8");
+  const b = Buffer.from(String(right), "utf8");
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
+function hashPasswordLegacy(password) {
   return crypto.createHash("sha256").update(`${password}:${PASSWORD_SALT}`).digest("hex");
+}
+
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const digest = crypto.pbkdf2Sync(password, salt, PBKDF2_ITERATIONS, 32, "sha512").toString("hex");
+  return `pbkdf2$${PBKDF2_ITERATIONS}$${salt}$${digest}`;
+}
+
+function isLegacyPasswordHash(hashValue) {
+  return typeof hashValue === "string" && !hashValue.startsWith("pbkdf2$");
+}
+
+function verifyPassword(password, storedHash) {
+  if (typeof storedHash !== "string" || storedHash.length === 0) return false;
+  if (!storedHash.startsWith("pbkdf2$")) {
+    return secureEqual(hashPasswordLegacy(password), storedHash);
+  }
+
+  const [scheme, iterationText, salt, digest] = storedHash.split("$");
+  if (scheme !== "pbkdf2") return false;
+  const iterations = Number(iterationText);
+  if (!Number.isInteger(iterations) || iterations < 120_000 || !salt || !digest) return false;
+
+  const candidate = crypto.pbkdf2Sync(password, salt, iterations, 32, "sha512").toString("hex");
+  return secureEqual(candidate, digest);
+}
+
+function hashSessionToken(token) {
+  return crypto.createHash("sha256").update(`${token}:${SESSION_TOKEN_PEPPER}`).digest("hex");
+}
+
+function resolveTrustProxy(value) {
+  if (value === undefined || value === null) return false;
+  const normalized = String(value).trim();
+  if (!normalized) return false;
+  const lower = normalized.toLowerCase();
+  if (lower === "true") return true;
+  if (lower === "false") return false;
+  if (/^\d+$/.test(normalized)) return Number(normalized);
+  return normalized;
+}
+
+function normalizeClientIp(req) {
+  return String(req.ip || req.socket?.remoteAddress || "unknown").replace(/^::ffff:/, "");
 }
 
 function parseJson(value, fallback) {
@@ -188,6 +248,312 @@ function parseJson(value, fallback) {
 
 function toBoolFlag(value) {
   return value ? 1 : 0;
+}
+
+function validateSchema(payload, schema) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return { ok: false, error: "Invalid JSON payload." };
+  }
+
+  const result = {};
+  for (const [field, rules] of Object.entries(schema)) {
+    const hasValue = payload[field] !== undefined && payload[field] !== null;
+    if (!hasValue) {
+      if (rules.required) {
+        return { ok: false, error: `${field} is required.` };
+      }
+      if (Object.hasOwn(rules, "default")) {
+        result[field] = rules.default;
+      }
+      continue;
+    }
+
+    if (rules.type === "string") {
+      if (typeof payload[field] !== "string") {
+        return { ok: false, error: `${field} must be a string.` };
+      }
+      const normalized = rules.trim ? payload[field].trim() : payload[field];
+      const nextValue = rules.uppercase
+        ? normalized.toUpperCase()
+        : rules.lowercase
+          ? normalized.toLowerCase()
+          : normalized;
+      if (rules.min && nextValue.length < rules.min) {
+        return { ok: false, error: `${field} is too short.` };
+      }
+      if (rules.max && nextValue.length > rules.max) {
+        return { ok: false, error: `${field} is too long.` };
+      }
+      if (rules.pattern && !rules.pattern.test(nextValue)) {
+        return { ok: false, error: `${field} has an invalid format.` };
+      }
+      if (rules.enum && !rules.enum.includes(nextValue)) {
+        return { ok: false, error: `${field} is not supported.` };
+      }
+      result[field] = nextValue;
+      continue;
+    }
+
+    if (rules.type === "number") {
+      const nextValue = rules.coerce ? Number(payload[field]) : payload[field];
+      if (typeof nextValue !== "number" || Number.isNaN(nextValue)) {
+        return { ok: false, error: `${field} must be a number.` };
+      }
+      if (rules.finite && !Number.isFinite(nextValue)) {
+        return { ok: false, error: `${field} must be finite.` };
+      }
+      if (rules.min !== undefined && nextValue < rules.min) {
+        return { ok: false, error: `${field} is below minimum allowed value.` };
+      }
+      if (rules.max !== undefined && nextValue > rules.max) {
+        return { ok: false, error: `${field} exceeds maximum allowed value.` };
+      }
+      result[field] = nextValue;
+      continue;
+    }
+
+    if (rules.type === "boolean") {
+      const input = payload[field];
+      if (typeof input === "boolean") {
+        result[field] = input;
+        continue;
+      }
+      if (rules.coerce) {
+        if (typeof input === "number") {
+          if (input === 1) {
+            result[field] = true;
+            continue;
+          }
+          if (input === 0) {
+            result[field] = false;
+            continue;
+          }
+        }
+        if (typeof input === "string") {
+          const normalized = input.trim().toLowerCase();
+          if (["1", "true", "yes", "y", "on"].includes(normalized)) {
+            result[field] = true;
+            continue;
+          }
+          if (["0", "false", "no", "n", "off", ""].includes(normalized)) {
+            result[field] = false;
+            continue;
+          }
+        }
+        if (input === null || input === undefined) {
+          result[field] = false;
+          continue;
+        }
+        return { ok: false, error: `${field} must be a boolean.` };
+      }
+      return { ok: false, error: `${field} must be a boolean.` };
+    }
+
+    if (rules.type === "string[]") {
+      if (!Array.isArray(payload[field])) {
+        return { ok: false, error: `${field} must be an array.` };
+      }
+      if (rules.maxItems && payload[field].length > rules.maxItems) {
+        return { ok: false, error: `${field} has too many items.` };
+      }
+      const list = [];
+      for (const value of payload[field]) {
+        if (typeof value !== "string") {
+          return { ok: false, error: `${field} items must be strings.` };
+        }
+        const nextValue = rules.trim ? value.trim() : value;
+        if (nextValue.length === 0) continue;
+        if (rules.itemMax && nextValue.length > rules.itemMax) {
+          return { ok: false, error: `${field} item is too long.` };
+        }
+        list.push(nextValue);
+      }
+      if (rules.minItems && list.length < rules.minItems) {
+        return { ok: false, error: `${field} must include at least one item.` };
+      }
+      result[field] = list;
+      continue;
+    }
+  }
+
+  return { ok: true, value: result };
+}
+
+function toPublicKeyOrNull(value) {
+  if (!value || typeof value !== "string") return null;
+  try {
+    return new PublicKey(value);
+  } catch {
+    return null;
+  }
+}
+
+async function fetchSplTokenBalance(connection, ownerAddress, mintAddress) {
+  const owner = toPublicKeyOrNull(ownerAddress);
+  const mint = toPublicKeyOrNull(mintAddress);
+  if (!owner || !mint) return null;
+
+  const response = await connection.getParsedTokenAccountsByOwner(owner, { programId: TOKEN_PROGRAM_ID }, "confirmed");
+  if (!Array.isArray(response?.value) || response.value.length === 0) {
+    return null;
+  }
+
+  const expectedMint = mint.toBase58();
+  let totalBalance = 0;
+  let foundMatchingAccount = false;
+  for (const accountInfo of response.value) {
+    const accountMint = accountInfo?.account?.data?.parsed?.info?.mint;
+    if (accountMint !== expectedMint) continue;
+    foundMatchingAccount = true;
+
+    const tokenAmount = accountInfo?.account?.data?.parsed?.info?.tokenAmount;
+    const parsedAmount = Number(tokenAmount?.uiAmountString ?? tokenAmount?.uiAmount ?? 0);
+    if (Number.isFinite(parsedAmount)) {
+      totalBalance += parsedAmount;
+    }
+  }
+  if (!foundMatchingAccount) return null;
+  return Number(totalBalance.toFixed(6));
+}
+
+function aiChatRateLimitKey(req, keyPrefix) {
+  const userId = req.auth?.user?.id || "anonymous";
+  const ip = normalizeClientIp(req);
+  return `${keyPrefix}:user:${userId}:ip:${ip}`;
+}
+
+function cleanupExpiredRateLimitBuckets(now, storage) {
+  for (const [key, value] of storage) {
+    if (now > value.resetAt) storage.delete(key);
+  }
+}
+
+const loginSchema = {
+  email: {
+    type: "string",
+    required: true,
+    trim: true,
+    lowercase: true,
+    min: 5,
+    max: 254,
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  },
+  password: {
+    type: "string",
+    required: true,
+    min: 6,
+    max: 128,
+  },
+};
+
+const createPaymentSchema = {
+  name: {
+    type: "string",
+    required: true,
+    trim: true,
+    min: 2,
+    max: 120,
+  },
+  type: {
+    type: "string",
+    required: false,
+    trim: true,
+    enum: ["escrow", "milestone", "subscription", "automated"],
+    default: "escrow",
+  },
+  amount: {
+    type: "number",
+    required: true,
+    coerce: true,
+    finite: true,
+    min: 0.000001,
+    max: 1_000_000_000,
+  },
+  currency: {
+    type: "string",
+    required: false,
+    trim: true,
+    uppercase: true,
+    enum: ["USDC", "USDT", "SOL"],
+    default: "USDC",
+  },
+  recipient: {
+    type: "string",
+    required: true,
+    trim: true,
+    min: 2,
+    max: 160,
+  },
+  conditions: {
+    type: "string[]",
+    required: false,
+    trim: true,
+    maxItems: 20,
+    itemMax: 160,
+    default: [],
+  },
+  recipientKycVerified: {
+    type: "boolean",
+    required: false,
+    coerce: true,
+    default: false,
+  },
+  travelRuleReady: {
+    type: "boolean",
+    required: false,
+    coerce: true,
+    default: false,
+  },
+};
+
+const batchExecuteSchema = {
+  paymentIds: {
+    type: "string[]",
+    required: true,
+    trim: true,
+    minItems: 1,
+    maxItems: 20,
+    itemMax: 80,
+  },
+  mode: {
+    type: "string",
+    required: false,
+    trim: true,
+    enum: ["manual", "ai"],
+    default: "manual",
+  },
+};
+
+const aiChatSchema = {
+  message: {
+    type: "string",
+    required: true,
+    trim: true,
+    min: 1,
+    max: 2000,
+  },
+};
+
+function parseOptionalIsoDate(value) {
+  if (value === undefined || value === null || value === "") return null;
+  if (typeof value !== "string") return null;
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return null;
+  return parsed.toISOString();
+}
+
+function sanitizeChatHistory(input) {
+  if (!Array.isArray(input)) return [];
+  return input
+    .slice(-20)
+    .filter((item) => item && typeof item === "object")
+    .map((item) => {
+      const role = item.role === "assistant" || item.role === "user" ? item.role : "user";
+      const content = String(item.content || "").trim().slice(0, 2000);
+      return { role, content };
+    })
+    .filter((item) => item.content.length > 0)
+    .slice(-12);
 }
 
 function serializeUser(row) {
@@ -704,19 +1070,43 @@ function parseAuthToken(req) {
 }
 
 function getSessionUser(token) {
-  const row = db
+  const hashedToken = hashSessionToken(token);
+  let row = db
     .prepare(
       `SELECT s.token, s.expires_at, u.*
        FROM sessions s
        JOIN users u ON u.id = s.user_id
        WHERE s.token = ?`
     )
-    .get(token);
+    .get(hashedToken);
+
+  let legacyTokenMatched = false;
+  if (!row) {
+    row = db
+      .prepare(
+        `SELECT s.token, s.expires_at, u.*
+         FROM sessions s
+         JOIN users u ON u.id = s.user_id
+         WHERE s.token = ?`
+      )
+      .get(token);
+    legacyTokenMatched = Boolean(row);
+  }
+
   if (!row) return null;
   if (new Date(row.expires_at).getTime() < Date.now()) {
-    db.prepare("DELETE FROM sessions WHERE token = ?").run(token);
+    db.prepare("DELETE FROM sessions WHERE token = ?").run(row.token);
     return null;
   }
+
+  if (legacyTokenMatched) {
+    try {
+      db.prepare("UPDATE sessions SET token = ? WHERE token = ?").run(hashedToken, token);
+    } catch {
+      // Keep legacy session active if migration fails for any reason.
+    }
+  }
+
   return row;
 }
 
@@ -745,13 +1135,34 @@ async function refreshWalletBalances() {
   const connection = new Connection(endpoint, "confirmed");
   const update = db.prepare("UPDATE wallets SET balance = ? WHERE address = ?");
   const refreshed = [];
+  const stablecoinMints = {
+    USDC: USDC_TOKEN_MINT,
+    USDT: USDT_TOKEN_MINT,
+  };
 
   for (const row of rows) {
     let nextBalance = row.balance;
     try {
-      if (row.currency === "USDC" || row.currency === "USDT") {
-        const lamports = await connection.getBalance(row.address);
-        nextBalance = Number((lamports / LAMPORTS_PER_SOL).toFixed(6));
+      if (row.currency === "SOL") {
+        const owner = toPublicKeyOrNull(row.address);
+        if (owner) {
+          const lamports = await connection.getBalance(owner);
+          nextBalance = Number((lamports / LAMPORTS_PER_SOL).toFixed(6));
+        }
+      } else if (row.currency === "USDC" || row.currency === "USDT") {
+        const mintAddress = stablecoinMints[row.currency];
+        if (mintAddress) {
+          const splBalance = await fetchSplTokenBalance(connection, row.address, mintAddress);
+          if (splBalance !== null) {
+            nextBalance = splBalance;
+          }
+        }
+      } else {
+        const owner = toPublicKeyOrNull(row.address);
+        if (owner) {
+          const lamports = await connection.getBalance(owner);
+          nextBalance = Number((lamports / LAMPORTS_PER_SOL).toFixed(6));
+        }
       }
     } catch {
       nextBalance = row.balance;
@@ -764,7 +1175,7 @@ async function refreshWalletBalances() {
 }
 
 const app = express();
-app.set("trust proxy", 1);
+app.set("trust proxy", resolveTrustProxy(TRUST_PROXY));
 app.use(express.json({ limit: "1mb" }));
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -774,10 +1185,17 @@ app.use((req, res, next) => {
 });
 
 const requestBuckets = new Map();
-function rateLimit({ windowMs, max, keyPrefix }) {
+function rateLimit({ windowMs, max, keyPrefix, keyBuilder }) {
   return (req, res, next) => {
-    const key = `${keyPrefix}:${req.ip || "unknown"}`;
+    const key = typeof keyBuilder === "function"
+      ? keyBuilder(req, keyPrefix)
+      : `${keyPrefix}:ip:${normalizeClientIp(req)}`;
     const now = Date.now();
+
+    if (requestBuckets.size > 10_000) {
+      cleanupExpiredRateLimitBuckets(now, requestBuckets);
+    }
+
     const bucket = requestBuckets.get(key) || { count: 0, resetAt: now + windowMs };
     if (now > bucket.resetAt) {
       bucket.count = 0;
@@ -785,7 +1203,13 @@ function rateLimit({ windowMs, max, keyPrefix }) {
     }
     bucket.count += 1;
     requestBuckets.set(key, bucket);
+
+    res.setHeader("X-RateLimit-Limit", String(max));
+    res.setHeader("X-RateLimit-Remaining", String(Math.max(0, max - bucket.count)));
+    res.setHeader("X-RateLimit-Reset", String(Math.ceil(bucket.resetAt / 1000)));
+
     if (bucket.count > max) {
+      res.setHeader("Retry-After", String(Math.max(1, Math.ceil((bucket.resetAt - now) / 1000))));
       return res.status(429).json({ error: "Too many requests. Please retry later." });
     }
     next();
@@ -802,21 +1226,27 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.post("/api/auth/login", rateLimit({ windowMs: 60_000, max: 20, keyPrefix: "login" }), (req, res) => {
-  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
-  const password = typeof req.body?.password === "string" ? req.body.password : "";
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required." });
-  }
+  const parsed = validateSchema(req.body ?? {}, loginSchema);
+  if (!parsed.ok) return res.status(400).json({ error: parsed.error });
+  const { email, password } = parsed.value;
+
   const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
-  if (!user || user.password_hash !== hashPassword(password)) {
+  if (!user || !verifyPassword(password, user.password_hash)) {
     return res.status(401).json({ error: "Invalid credentials." });
   }
 
+  if (isLegacyPasswordHash(user.password_hash)) {
+    const upgradedHash = hashPassword(password);
+    db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(upgradedHash, user.id);
+    user.password_hash = upgradedHash;
+  }
+
   const token = crypto.randomUUID();
+  const tokenHash = hashSessionToken(token);
   const createdAt = nowIso();
   const expiresAt = new Date(Date.now() + SESSION_TTL_HOURS * 60 * 60 * 1000).toISOString();
   db.prepare("INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)").run(
-    token,
+    tokenHash,
     user.id,
     createdAt,
     expiresAt
@@ -836,7 +1266,8 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
 });
 
 app.post("/api/auth/logout", requireAuth, (req, res) => {
-  db.prepare("DELETE FROM sessions WHERE token = ?").run(req.auth.token);
+  const tokenHash = hashSessionToken(req.auth.token);
+  db.prepare("DELETE FROM sessions WHERE token = ? OR token = ?").run(tokenHash, req.auth.token);
   return res.json({ ok: true });
 });
 
@@ -880,16 +1311,13 @@ app.post("/api/wallets/refresh", requireAuth, requireRole(["admin", "operator"])
 });
 
 app.post("/api/payments", requireAuth, requireRole(["admin", "operator"]), (req, res) => {
-  const body = req.body ?? {};
-  const name = typeof body.name === "string" ? body.name.trim() : "";
-  const type = typeof body.type === "string" ? body.type : "";
-  const recipient = typeof body.recipient === "string" ? body.recipient.trim() : "";
-  const currency = typeof body.currency === "string" ? body.currency : "USDC";
-  const amount = Number(body.amount || 0);
-  const conditions = Array.isArray(body.conditions) ? body.conditions.filter(Boolean) : [];
+  const parsed = validateSchema(req.body ?? {}, createPaymentSchema);
+  if (!parsed.ok) return res.status(400).json({ error: parsed.error });
+  const payload = parsed.value;
 
-  if (!name || !recipient || !amount || amount <= 0) {
-    return res.status(400).json({ error: "Invalid payment payload." });
+  const nextExecution = parseOptionalIsoDate(req.body?.nextExecution);
+  if (req.body?.nextExecution !== undefined && req.body?.nextExecution !== null && !nextExecution) {
+    return res.status(400).json({ error: "nextExecution must be a valid ISO date string." });
   }
 
   const id = randomId("pp");
@@ -902,17 +1330,17 @@ app.post("/api/payments", requireAuth, requireRole(["admin", "operator"]), (req,
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).run(
     id,
-    name,
-    type || "escrow",
-    amount,
-    currency,
+    payload.name,
+    payload.type,
+    payload.amount,
+    payload.currency,
     "active",
-    JSON.stringify(conditions.length > 0 ? conditions : ["Policy validated"]),
+    JSON.stringify(payload.conditions.length > 0 ? payload.conditions : ["Policy validated"]),
     createdAt,
-    body.nextExecution || null,
-    recipient,
-    toBoolFlag(Boolean(body.recipientKycVerified)),
-    toBoolFlag(Boolean(body.travelRuleReady)),
+    nextExecution,
+    payload.recipient,
+    toBoolFlag(payload.recipientKycVerified),
+    toBoolFlag(payload.travelRuleReady),
     null,
     null,
     updatedAt
@@ -921,7 +1349,7 @@ app.post("/api/payments", requireAuth, requireRole(["admin", "operator"]), (req,
   const auditEvent = appendAuditEvent({
     category: "payment",
     action: "created",
-    message: `Payment contract "${name}" created.`,
+    message: `Payment contract "${payload.name}" created.`,
     paymentId: id,
     userId: req.auth.user.id,
   });
@@ -1029,7 +1457,7 @@ app.post("/api/payments/:id/compliance", requireAuth, requireRole(["admin", "ope
   });
 });
 
-app.post("/api/payments/:id/ai-recommendation", requireAuth, async (req, res) => {
+app.post("/api/payments/:id/ai-recommendation", requireAuth, requireRole(["admin", "operator"]), async (req, res) => {
   const paymentRow = db.prepare("SELECT * FROM payments WHERE id = ?").get(req.params.id);
   if (!paymentRow) return res.status(404).json({ error: "Payment not found." });
 
@@ -1151,8 +1579,9 @@ app.post(
   requireAuth,
   requireRole(["admin", "operator"]),
   async (req, res) => {
-    const rawIds = Array.isArray(req.body?.paymentIds) ? req.body.paymentIds : [];
-    const uniqueIds = [...new Set(rawIds.filter((id) => typeof id === "string" && id.trim().length > 0))];
+    const parsed = validateSchema(req.body ?? {}, batchExecuteSchema);
+    if (!parsed.ok) return res.status(400).json({ error: parsed.error });
+    const uniqueIds = [...new Set(parsed.value.paymentIds)];
     if (uniqueIds.length === 0) {
       return res.status(400).json({ error: "paymentIds must contain at least one valid payment id." });
     }
@@ -1160,7 +1589,7 @@ app.post(
       return res.status(400).json({ error: "Batch size limit is 20 payments per request." });
     }
 
-    const mode = req.body?.mode === "ai" ? "ai" : "manual";
+    const mode = parsed.value.mode;
     const batchId = randomId("batch");
     const results = [];
     const executedTransactions = [];
@@ -1313,7 +1742,7 @@ app.post("/api/compliance/alerts/:id/resolve", requireAuth, requireRole(["admin"
 app.post(
   "/api/ai/chat",
   requireAuth,
-  rateLimit({ windowMs: 60_000, max: 40, keyPrefix: "ai-chat" }),
+  rateLimit({ windowMs: 60_000, max: 40, keyPrefix: "ai-chat", keyBuilder: aiChatRateLimitKey }),
   async (req, res) => {
   try {
     if (!AI_API_KEY) {
@@ -1322,21 +1751,10 @@ app.post(
       });
     }
 
-    const body = req.body ?? {};
-    const inputMessage = typeof body.message === "string" ? body.message.trim() : "";
-    const history = Array.isArray(body.history) ? body.history : [];
-    if (!inputMessage) {
-      return res.status(400).json({ error: "Message is required." });
-    }
-
-    const safeHistory = history
-      .filter((item) => item && typeof item === "object")
-      .map((item) => ({
-        role: item.role === "assistant" || item.role === "user" ? item.role : "user",
-        content: String(item.content || ""),
-      }))
-      .filter((item) => item.content.trim().length > 0)
-      .slice(-12);
+    const parsed = validateSchema(req.body ?? {}, aiChatSchema);
+    if (!parsed.ok) return res.status(400).json({ error: parsed.error });
+    const inputMessage = parsed.value.message;
+    const safeHistory = sanitizeChatHistory(req.body?.history);
 
     const messages = [
       { role: "system", content: AI_SYSTEM_PROMPT },
@@ -1408,8 +1826,5 @@ if (process.env.NODE_ENV === "production") {
 
 app.listen(SERVER_PORT, () => {
   console.log(`CompliPay API server running on http://localhost:${SERVER_PORT}`);
-  console.log("Demo login credentials:");
-  console.log(" - admin@complipay.ai / Admin123!");
-  console.log(" - ops@complipay.ai / Ops123!");
-  console.log(" - viewer@complipay.ai / View123!");
+  console.log("Security hardening enabled: PBKDF2 passwords, hashed sessions, and schema validation.");
 });

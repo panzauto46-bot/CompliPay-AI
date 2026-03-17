@@ -12,11 +12,14 @@ import {
 } from 'lucide-react';
 import { WalletInfo } from '../types';
 import { useAppData } from '../context/AppDataContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function Wallets() {
+  const { user } = useAuth();
   const { walletsData, refreshWalletBalances } = useAppData();
   const [selectedWallet, setSelectedWallet] = useState<WalletInfo | null>(null);
   const [showConnectModal, setShowConnectModal] = useState(false);
+  const canManageWallets = user?.role === 'admin' || user?.role === 'operator';
 
   const totalBalance = walletsData.reduce((acc, w) => acc + w.balance, 0);
 
@@ -29,20 +32,28 @@ export default function Wallets() {
           <p className="text-slate-400 mt-1">Manage institutional custody integrations</p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => refreshWalletBalances().catch(() => null)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-lg transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh Balances
-          </button>
-          <button
-            onClick={() => setShowConnectModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-600 text-white font-medium rounded-lg transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Connect Wallet
-          </button>
+          {canManageWallets ? (
+            <>
+              <button
+                onClick={() => refreshWalletBalances().catch(() => null)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-lg transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Refresh Balances
+              </button>
+              <button
+                onClick={() => setShowConnectModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-600 text-white font-medium rounded-lg transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Connect Wallet
+              </button>
+            </>
+          ) : (
+            <span className="px-3 py-2 text-xs font-medium rounded-lg bg-slate-800 text-slate-300 border border-slate-700">
+              Viewer mode: read-only
+            </span>
+          )}
         </div>
       </div>
 
@@ -140,15 +151,17 @@ export default function Wallets() {
         ))}
 
         {/* Add Wallet Card */}
-        <button
-          onClick={() => setShowConnectModal(true)}
-          className="bg-slate-900/50 border-2 border-dashed border-slate-700 rounded-xl p-6 flex flex-col items-center justify-center gap-3 hover:border-violet-500/50 hover:bg-slate-900 transition-colors min-h-[200px]"
-        >
-          <div className="p-3 bg-slate-800 rounded-lg">
-            <Plus className="w-6 h-6 text-slate-400" />
-          </div>
-          <p className="text-sm font-medium text-slate-400">Connect New Wallet</p>
-        </button>
+        {canManageWallets && (
+          <button
+            onClick={() => setShowConnectModal(true)}
+            className="bg-slate-900/50 border-2 border-dashed border-slate-700 rounded-xl p-6 flex flex-col items-center justify-center gap-3 hover:border-violet-500/50 hover:bg-slate-900 transition-colors min-h-[200px]"
+          >
+            <div className="p-3 bg-slate-800 rounded-lg">
+              <Plus className="w-6 h-6 text-slate-400" />
+            </div>
+            <p className="text-sm font-medium text-slate-400">Connect New Wallet</p>
+          </button>
+        )}
       </div>
 
       {/* Custody Providers */}
@@ -295,7 +308,7 @@ export default function Wallets() {
       )}
 
       {/* Connect Wallet Modal */}
-      {showConnectModal && (
+      {showConnectModal && canManageWallets && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/70" onClick={() => setShowConnectModal(false)} />
           <div className="relative w-full max-w-md bg-slate-900 rounded-xl border border-slate-800 p-6 shadow-xl">

@@ -1,99 +1,110 @@
-# CompliPay AI Architecture
+﻿# CompliPay AI Architecture
 
-## 1) High-Level Overview
+Updated: March 17, 2026 (Asia/Jakarta)
 
-CompliPay AI is a frontend-first MVP with local orchestration logic that simulates an institutional payment operations stack:
+## 1) System Overview
 
-- **Presentation Layer**: React pages for operations, compliance, AI, transactions, and audit evidence.
-- **Orchestration Layer**: `AppDataContext` coordinates payment lifecycle, compliance, AI recommendation, execution, and logs.
-- **Policy Layer**: deterministic compliance engine (`compliancePolicy.ts`) returns `ALLOW`, `REVIEW`, or `BLOCK`.
-- **Execution Layer**: Solana executor (`solanaExecutor.ts`) attempts real testnet/devnet transaction submission and explicit simulation fallback.
+CompliPay AI uses a fullstack architecture (React + Express + SQLite + Solana RPC).
 
-## 2) Core Runtime Components
+Layers:
+- Presentation: React app (`src/`) with protected routes and role-aware UI.
+- Application API: Express server (`server/server.js`) for auth, payments, compliance, execution, AI proxy, wallets, and audit logging.
+- Persistence: SQLite (`server/data/complipay.db`) with WAL mode.
+- Blockchain: Solana testnet/devnet execution with simulated fallback.
+- External services: DashScope-compatible LLM endpoint and optional compliance provider endpoint.
 
-### `src/context/AppDataContext.tsx`
+## 2) Runtime Components
 
-Central source of truth for:
-- Programmable payments
-- Transactions
-- Compliance alerts
-- AI tasks
-- Audit events
+### Frontend
+- `src/context/AuthContext.tsx`
+  - Login/logout/session refresh.
+  - Auth state for route protection.
+- `src/context/AppDataContext.tsx`
+  - Bootstrap data loading.
+  - Mutations for payment lifecycle, compliance, execution, alerts, wallets, and audit updates.
+- `src/lib/api.ts`
+  - Bearer token request wrapper.
+  - Token persistence using `sessionStorage` with legacy migration from `localStorage`.
 
-Main actions:
-- `createPayment`
-- `runCompliance`
-- `requestAIRecommendation`
-- `executePayment`
-- `resolveAlert`
-- `exportTransactionsCsv`
+### Backend
+- `server/server.js` (single-file service)
+  - Auth:
+    - PBKDF2 password verification with legacy SHA-256 compatibility migration.
+    - Session token hashing at rest (SQLite stores hashed token).
+  - Authorization:
+    - RBAC on privileged mutation endpoints (`admin`, `operator`).
+    - Viewer role is read-only in UI and blocked on privileged APIs.
+  - Compliance:
+    - Deterministic policy checks (KYC, KYT, AML, Travel Rule).
+    - Optional external compliance provider call.
+  - Execution:
+    - Policy-gated payment execution.
+    - Solana testnet first, devnet fallback, simulation fallback.
+    - Batch execution endpoint with per-item result summary.
+  - AI:
+    - Authenticated chat proxy with user+IP rate limit strategy.
+  - Wallets:
+    - Balance refresh from RPC.
+    - SPL balance path for USDC/USDT when mint env vars are configured.
+  - Audit:
+    - Append-only event logging linked to payment and/or transaction IDs.
 
-### `src/lib/compliancePolicy.ts`
+## 3) Data Model (SQLite)
 
-Evaluates:
-- KYC
-- KYT
-- AML
-- Travel Rule
+Tables:
+- `users`
+- `sessions`
+- `payments`
+- `transactions`
+- `compliance_alerts`
+- `ai_tasks`
+- `wallets`
+- `audit_events`
 
-Returns:
-- `decision`: `allow | review | block`
-- `score`
-- per-check status
-- reason list
-- timestamp
+Key model notes:
+- `sessions.token` stores hashed tokens.
+- `payments.compliance_result_json` stores compliance decisions and reasons.
+- `transactions` tracks execution network, simulation status, asset layer, and batch ID.
+- `audit_events` is the main traceability ledger for operations and policy actions.
 
-### `src/lib/solanaExecutor.ts`
+## 4) End-to-End Flow
 
-Execution strategy:
-1. Attempt real transfer on **testnet**
-2. Fallback to real transfer on **devnet**
-3. If network constraints persist, create explicit **simulated** result
+1. User signs in with email/password.
+2. Frontend stores auth token in session scope and loads `/api/bootstrap`.
+3. Operator/admin creates payment contract.
+4. Compliance is evaluated (`allow`, `review`, `block`).
+5. AI recommendation can be requested (policy-constrained guidance).
+6. Execution is allowed only when compliance decision is `allow`.
+7. Transaction evidence and audit events are persisted and reflected in UI.
 
-Returned evidence:
-- transaction signature
-- explorer URL
-- network used
-- `simulated` flag
+## 5) Security Model
 
-## 3) End-to-End Data Flow
+Implemented controls:
+- PBKDF2 password hashing (`AUTH_PBKDF2_ITERATIONS`), legacy hash migration support.
+- Hashed session tokens at rest (`SESSION_TOKEN_PEPPER`).
+- Schema-based payload validation for critical endpoints.
+- Explicit proxy trust control (`TRUST_PROXY`).
+- Rate limiting:
+  - Login endpoint keyed by IP.
+  - Authenticated AI chat endpoint keyed by user+IP.
+- Security headers:
+  - `X-Content-Type-Options: nosniff`
+  - `X-Frame-Options: DENY`
+  - `Referrer-Policy: no-referrer`
 
-1. User creates payment contract in `Payments`.
-2. `runCompliance` evaluates policy and stores result.
-3. `requestAIRecommendation` generates guidance constrained by policy outcome.
-4. `executePayment` enforces compliance gate:
-   - only `ALLOW` can execute
-   - `REVIEW`/`BLOCK` are denied
-5. Successful/simulated execution writes transaction + explorer reference.
-6. All major lifecycle steps append to `auditEvents`.
-7. `Dashboard`, `Compliance`, `Transactions`, and `AuditTrail` read from the same context state.
+## 6) Known Limitations
 
-## 4) Auditability Model
+Current limitations:
+- Server remains monolithic in a single file.
+- No automated test suite in repository.
+- No OpenAPI spec generation.
+- Wallet accuracy for USDC/USDT depends on mint env configuration.
+- Settings and some integration screens remain partially presentation-focused.
 
-Audit evidence contains:
-- category (`payment`, `compliance`, `execution`, `ai`)
-- action (`created`, `evaluated`, `completed`, etc.)
-- human-readable message
-- timestamp
-- optional `paymentId` and `transactionId` linkage
+## 7) Next Hardening Targets
 
-This enables:
-- traceability from business intent -> policy decision -> on-chain execution
-- filterable review for compliance teams and judges
-
-## 5) Security and Guardrails (MVP Scope)
-
-- Policy gate is authoritative before execution.
-- AI cannot bypass compliance outcomes.
-- No private institutional keys are embedded.
-- Solana execution uses ephemeral runtime keypairs for demo behavior.
-
-## 6) MVP Limitations and Next Hardening
-
-Not yet production-grade:
-- external identity/compliance provider integrations
-- enterprise custody and role approval flows
-- backend persistence and signed audit artifacts
-- robust retry queues and SLO monitoring
-
-These are planned in post-hackathon hardening phases.
+Planned:
+- Break server into route/service modules.
+- Add integration tests for auth/compliance/execution.
+- Add structured logs and error telemetry.
+- Add provider-level wallet/compliance integrations for pilot readiness.

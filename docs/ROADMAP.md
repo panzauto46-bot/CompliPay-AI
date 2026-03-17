@@ -1,160 +1,164 @@
-# CompliPay AI Roadmap
+﻿# CompliPay AI Roadmap
 
-## Version
-v3 (progress-based, production-readiness focus)
+Updated: March 17, 2026 (Asia/Jakarta)
+Version: v4 (post-security-hardening sync)
 
-## 0) Current Project Status (Real Readiness)
+## 0) Current Status
 
-- **Demo/MVP Readiness:** Very high (live AI + auth + persistent API flow are present)
-- **Production Readiness:** **86%**
-- Main gap to 100%: external compliance/custody provider integrations, automated test coverage, and submission logistics.
+- Demo/MVP readiness: high.
+- Production readiness estimate: 86%.
+- Main gaps to 100%:
+  - automated testing,
+  - provider-grade integrations (compliance/custody),
+  - full submission finalization assets.
 
-## 1) MVP Progress Roadmap (0% -> 100%)
+## 1) Delivery Phases (0% -> 100%)
 
 ### Final Target
-- Reach **100% production readiness** while preserving a submission-ready StableHacks package.
-- Maintain a smooth 3-minute demo from contract creation to visible testnet tx hash.
+Deliver a stable, auditable, policy-gated payment platform that is submission-ready and demo-safe.
 
-### Phase 1 - Scope Lock and Environment Setup (**0% -> 15%**)
-- Confirm primary track: Programmable Stablecoin Payments.
-- Freeze MVP scope to prevent scope creep.
-- Finalize frontend, backend, and Solana testnet environment setup.
-- Exit criteria:
-  - MVP scope approved
-  - Dev environment stable
-- Status: **95%** (scope, infra, and local fullstack runtime are stable)
+### Phase 1 - Scope and Environment (0% -> 15%)
+Status: 100%
 
-### Phase 2 - Core Payment Execution on Solana (**15% -> 35%**)
-- Implement programmable payment flow.
-- Trigger payment execution on Solana testnet.
-- Persist transaction status and `txHash`.
-- Exit criteria:
-  - At least one successful end-to-end testnet payment
-  - Transaction hash stored and retrievable
-- Status: **100%** (single and batch execution are API-backed with SPL transfer path + tx evidence)
+Completed:
+- Scope locked to Programmable Stablecoin Payments track.
+- Frontend + backend local runtime stabilized.
+- Core documentation baseline prepared.
 
-### Phase 3 - Mandatory Compliance Gates (**35% -> 55%**)
-- Implement KYC, KYT, AML, and Travel Rule checks.
-- Return policy decisions: `ALLOW`, `REVIEW`, `BLOCK`.
-- Prevent auto-execution when decision is not `ALLOW`.
-- Exit criteria:
-  - Compliance matrix active
-  - Test scenarios pass (allow/review/block)
-- Status: **75%** (policy logic is API-backed, plus external provider connector path is available)
+### Phase 2 - Core Payment Execution (15% -> 35%)
+Status: 100%
 
-### Phase 4 - Audit Trail and Explorer Evidence (**55% -> 70%**)
-- Log all key actions and decisions.
-- Display audit records in UI.
-- Add explorer deep links from tx hash.
-- Exit criteria:
-  - Filterable audit trail
-  - Explorer links accessible from UI
-- Status: **80%** (audit logs are persisted in append-only server-side storage)
+Completed:
+- Programmable payment lifecycle API-backed.
+- Single execution and batch execution flows implemented.
+- Solana transaction evidence captured (`txHash`, explorer URL, network, simulated flag).
 
-### Phase 5 - Guardrailed AI Assistant (**70% -> 82%**)
-- Integrate AI recommendation layer for execution guidance.
-- Ensure policy engine remains authoritative.
-- Exit criteria:
-  - AI suggestions visible in UI
-  - AI cannot bypass compliance gate
-- Status: **78%** (live AI chat is active and payment execution remains policy-gated)
+### Phase 3 - Compliance Controls (35% -> 55%)
+Status: 80%
 
-### Phase 6 - UI/UX Polish and Stability (**82% -> 92%**)
-- Align visual consistency across all pages.
-- Improve loading/error states and navigation flow.
-- Fix high-priority UX bugs.
-- Exit criteria:
-  - Clean presentation-ready UI
-  - No blocker-level bugs
-- Status: **90%** (strong visual polish and flow consistency)
+Completed:
+- Deterministic KYC/KYT/AML/Travel Rule checks.
+- Execution hard-gated by compliance decision.
+- Persistent compliance alerts and resolve actions.
 
-### Phase 7 - Submission Packaging (**92% -> 97%**)
-- Prepare Loom video (<= 3 minutes).
-- Finalize README, architecture summary, and run instructions.
-- Verify public repository quality.
-- Exit criteria:
-  - Submission artifacts complete
-  - Repo is judge-ready
-- Status: **74%** (core docs are ready; final external submission assets still team-dependent)
+Remaining:
+- deeper external provider coverage and scenario mapping.
 
-### Phase 8 - Final QA and Submission (**97% -> 100%**)
-- Perform multiple dry-runs of the full demo.
-- Validate final checklist (team info, repo, video, demo/testnet proof).
-- Submit the final entry.
-- Exit criteria:
-  - Final status: submitted
-  - Backup of all submission links/artifacts
-- Status: **58%** (technical dry-run flow is available; final external submission is pending)
+### Phase 4 - Audit and Evidence Layer (55% -> 70%)
+Status: 82%
 
-## 2) Progress Tracking Table
+Completed:
+- Append-only audit events persisted in SQLite.
+- Evidence links between payment, transaction, and audit actions.
+- Filterable audit trail UI and explorer links.
+
+Remaining:
+- richer export formats and regulator-specific evidence packs.
+
+### Phase 5 - AI Assistant and Guardrails (70% -> 82%)
+Status: 80%
+
+Completed:
+- Authenticated AI chat proxy to DashScope-compatible endpoint.
+- AI recommendation path policy-constrained by server checks.
+- AI chat rate limiting with user+IP key strategy.
+
+Remaining:
+- deeper assistant grounding with domain policies and tool feedback loops.
+
+### Phase 6 - UI/UX Stabilization (82% -> 92%)
+Status: 90%
+
+Completed:
+- Consistent visual treatment across core pages.
+- Role-aware UI gating for viewer on sensitive actions.
+- Strong demo flow across payments, compliance, execution, and audit pages.
+
+Remaining:
+- deeper persistence coverage for settings/integration screens.
+
+### Phase 7 - Submission Packaging (92% -> 97%)
+Status: 76%
+
+Completed:
+- README and architecture docs synchronized.
+- Security rollout runbook and audit sync docs available.
+- Demo runbook and submission checklist are ready.
+
+Remaining:
+- final team metadata lock,
+- final Loom video,
+- final public fullstack demo verification.
+
+### Phase 8 - Final QA and Submission (97% -> 100%)
+Status: 60%
+
+Completed:
+- Core flow is dry-run ready.
+- Main docs are synchronized with implementation.
+
+Remaining:
+- structured final dry-runs,
+- final submission lock-in artifacts.
+
+## 2) Workstream Tracking
 
 | Workstream | Weight | Current % | Notes |
 |---|---:|---:|---|
-| Scope & Setup | 15% | 95% | Scope is locked and local fullstack runtime is stable. |
-| Core On-chain Payment | 20% | 100% | Core flow is API-backed with SPL transfer path and batch execution support. |
-| Compliance Engine | 20% | 75% | Decision matrix is persistent and connector-ready for external providers. |
-| Audit Trail | 15% | 80% | Audit events are persisted and shown in filterable UI. |
-| AI Guardrails | 12% | 78% | Live LLM chat is integrated while execution remains policy-constrained. |
-| UI/UX Polish | 10% | 90% | Presentation quality is strong across pages. |
-| Submission Assets | 8% | 74% | Docs are strong; final submission assets and lock-in are pending. |
+| Scope and Setup | 15% | 100% | Stable baseline established. |
+| Core Payment Execution | 20% | 100% | API-backed single + batch execution. |
+| Compliance Engine | 20% | 80% | Deterministic and persistent, external depth pending. |
+| Audit and Evidence | 15% | 82% | Linked evidence and append-only logging active. |
+| AI Guardrails | 12% | 80% | Live AI chat + guarded recommendation flow. |
+| UI/UX | 10% | 90% | Presentation-ready core screens. |
+| Submission Assets | 8% | 76% | Most docs ready, external assets partially pending. |
 
-**Estimated total completion (weighted): 85.5% (real production readiness, rounded: 86%)**
+Weighted readiness: about 86%.
 
-## 2.1) Page-by-Page Project Status
+## 3) Page-Level Snapshot
 
-| Page | Current % | Status Notes |
+| Page | Current % | Notes |
 |---|---:|---|
-| Landing (`/`) | 95% | Production copy and visual delivery are near-final. |
-| Dashboard (`/dashboard`) | 78% | KPI and charts now consume persistent API state. |
-| Payments (`/payments`) | 90% | Contract/compliance/AI/execute flow is API-backed with batch execution controls. |
-| Compliance (`/compliance`) | 75% | Alerts, resolve actions, and metrics are backed by persistent API state. |
-| AI Agent (`/ai-agent`) | 80% | Live Qwen API chat is integrated with authenticated backend proxy. |
-| Audit Trail (`/audit-trail`) | 78% | Filterable evidence view now reads persisted append-only logs. |
-| Transactions (`/transactions`) | 76% | Persistent transactions, working pagination, and export are available. |
-| Wallets (`/wallets`) | 65% | API-backed wallet list plus balance refresh endpoint are integrated. |
-| Settings (`/settings`) | 60% | Auth-aware profile context is active; full persistence endpoints are still pending. |
+| Landing (`/`) | 95% | Presentation quality is strong. |
+| Login (`/login`) | 92% | Session flow stable, demo creds available. |
+| Dashboard (`/dashboard`) | 80% | Core KPI and charting available. |
+| Payments (`/payments`) | 92% | Full lifecycle + role-aware controls. |
+| Compliance (`/compliance`) | 80% | Alerts and resolution are integrated. |
+| AI Agent (`/ai-agent`) | 82% | Live chat path with backend policy boundaries. |
+| Audit Trail (`/audit-trail`) | 80% | Filterable evidence view stable. |
+| Transactions (`/transactions`) | 78% | Explorer links and CSV export available. |
+| Wallets (`/wallets`) | 70% | Refresh path improved; provider integration pending. |
+| Settings (`/settings`) | 60% | Useful shell, persistence still partial. |
 
-**Overall page completion (average): ~76.6% (real readiness view)**
+## 4) Required Quality Gates Before Submission
 
-## 3) Quality Gates (Must Pass)
+- Gate A: end-to-end payment flow works without code edits.
+- Gate B: compliance allow/review/block scenarios can be demonstrated.
+- Gate C: transaction and audit evidence are visible in UI.
+- Gate D: all core docs reflect actual implementation.
+- Gate E: security env vars validated in deployment target.
 
-- `Gate A` Technical: feature works end-to-end.
-- `Gate B` Demo: can be shown live without manual code edits.
-- `Gate C` Evidence: screenshot/video/txHash/log proof exists.
-- `Gate D` Documentation: PRD/README/roadmap updated with latest state.
+## 5) Post-Hackathon Path
 
-## 4) Post-Hackathon Progress Plan (If Top 10 / Pilot)
+### Phase A - Hardening (0% -> 40%)
+- Add automated integration tests.
+- Split server into route/service modules.
+- Add structured logging and error telemetry.
 
-### Phase A - Hardening (**0% -> 40%**)
-- Refactor core modules and improve fault handling.
-- Add integration tests for payment + compliance paths.
-- Expand role-based approval controls.
+### Phase B - Pilot Readiness (40% -> 75%)
+- Integrate production-grade compliance connectors.
+- Integrate institutional custody flows.
+- Expand role approval and governance controls.
 
-### Phase B - Pilot Readiness (**40% -> 75%**)
-- Integrate real compliance-provider connectors.
-- Integrate institutional custody workflows.
-- Add regulator-facing audit export (CSV/PDF).
-
-### Phase C - Demo Day Readiness (**75% -> 100%**)
-- Optimize reliability/performance for live demo.
-- Finalize pitch deck and business narrative.
-- Simulate judge Q&A and fallback demo paths.
-
-## 5) KPI Tracking
-
-- Testnet payment success rate
-- Compliance decision latency
-- Transactions with complete audit records (%)
-- Demo run success rate (error-free)
-- Submission completeness score (target: 100%)
+### Phase C - Demo Day Readiness (75% -> 100%)
+- Reliability tuning and fallback scripts.
+- Final narrative packaging and judge Q&A preparation.
 
 ## 6) Key Risks and Mitigations
 
-- Risk: Solana integration delay
-  - Mitigation: keep contract scope minimal and secure one successful payment flow first
-- Risk: Compliance scope grows too wide
-  - Mitigation: start with deterministic policy rules, then iterate
-- Risk: Demo instability
-  - Mitigation: maintain a stable fallback demo path
-- Risk: Incomplete submission package
-  - Mitigation: use a strict pre-submit checklist before final handoff
+- Risk: incomplete external submission assets.
+  - Mitigation: lock checklist owner and deadline per artifact.
+- Risk: demo instability from environment mismatch.
+  - Mitigation: use security rollout runbook and repeat dry-runs.
+- Risk: compliance connector surprises.
+  - Mitigation: keep deterministic local policy as primary fallback.

@@ -1,15 +1,63 @@
 const TOKEN_KEY = 'complipay_auth_token';
+let inMemoryToken: string | null = null;
+
+function canUseStorage() {
+  return typeof window !== 'undefined';
+}
+
+function readSessionToken(): string | null {
+  if (!canUseStorage()) return null;
+  try {
+    return window.sessionStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeSessionToken(token: string | null) {
+  if (!canUseStorage()) return;
+  try {
+    if (token) {
+      window.sessionStorage.setItem(TOKEN_KEY, token);
+    } else {
+      window.sessionStorage.removeItem(TOKEN_KEY);
+    }
+    // Remove legacy persistence if it exists.
+    window.localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    // Ignore storage errors and fall back to in-memory token.
+  }
+}
 
 export function getStoredToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
+  if (inMemoryToken) return inMemoryToken;
+
+  const sessionToken = readSessionToken();
+  if (sessionToken) {
+    inMemoryToken = sessionToken;
+    return sessionToken;
+  }
+
+  if (!canUseStorage()) return null;
+  try {
+    const legacyToken = window.localStorage.getItem(TOKEN_KEY);
+    if (!legacyToken) return null;
+    inMemoryToken = legacyToken;
+    writeSessionToken(legacyToken);
+    return legacyToken;
+  } catch {
+    return null;
+  }
 }
 
 export function setStoredToken(token: string) {
-  localStorage.setItem(TOKEN_KEY, token);
+  inMemoryToken = token;
+  writeSessionToken(token);
 }
 
 export function clearStoredToken() {
-  localStorage.removeItem(TOKEN_KEY);
+  inMemoryToken = null;
+  writeSessionToken(null);
 }
 
 export async function apiRequest<T>(

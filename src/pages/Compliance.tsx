@@ -24,14 +24,17 @@ import {
 } from 'recharts';
 import { ComplianceAlert } from '../types';
 import { useAppData } from '../context/AppDataContext';
+import { useAuth } from '../context/AuthContext';
 
 type AlertFilter = 'all' | 'open' | 'investigating' | 'resolved';
 
 export default function Compliance() {
+  const { user } = useAuth();
   const { complianceAlerts, chartData, resolveAlert } = useAppData();
   const [alertFilter, setAlertFilter] = useState<AlertFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAlert, setSelectedAlert] = useState<ComplianceAlert | null>(null);
+  const canResolveAlerts = user?.role === 'admin' || user?.role === 'operator';
 
   const filteredAlerts = complianceAlerts.filter((alert) => {
     const statusMatched = alertFilter === 'all' || alert.status === alertFilter;
@@ -331,7 +334,7 @@ export default function Compliance() {
                 >
                   Close
                 </button>
-                {selectedAlert.status !== 'resolved' && (
+                {selectedAlert.status !== 'resolved' && canResolveAlerts && (
                   <button
                     onClick={async () => {
                       try {
