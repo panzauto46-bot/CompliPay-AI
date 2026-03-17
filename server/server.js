@@ -28,6 +28,7 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const IS_VERCEL_RUNTIME = process.env.VERCEL === "1" || Boolean(process.env.VERCEL_URL);
 
 const SERVER_PORT = Number(process.env.SERVER_PORT || 8787);
 const SESSION_TTL_HOURS = Number(process.env.SESSION_TTL_HOURS || 24);
@@ -56,9 +57,12 @@ const MEMO_PROGRAM_ID = new PublicKey(
   process.env.MEMO_PROGRAM_ID || "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
 );
 
+const defaultDbDir = IS_VERCEL_RUNTIME
+  ? path.resolve("/tmp", "complipay-data")
+  : path.resolve(__dirname, "data");
 const dataDir = process.env.DB_DIR
   ? path.resolve(process.env.DB_DIR)
-  : path.resolve(__dirname, "data");
+  : defaultDbDir;
 mkdirSync(dataDir, { recursive: true });
 
 const db = new DatabaseSync(path.join(dataDir, "complipay.db"));
@@ -1853,7 +1857,7 @@ app.post(
   }
 );
 
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "production" && !IS_VERCEL_RUNTIME) {
   const distPath = path.resolve(__dirname, "../dist");
   app.use(express.static(distPath));
   app.get("*", (_req, res) => {
@@ -1861,7 +1865,11 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
-app.listen(SERVER_PORT, () => {
-  console.log(`CompliPay API server running on http://localhost:${SERVER_PORT}`);
-  console.log("Security hardening enabled: PBKDF2 passwords, hashed sessions, and schema validation.");
-});
+if (!IS_VERCEL_RUNTIME) {
+  app.listen(SERVER_PORT, () => {
+    console.log(`CompliPay API server running on http://localhost:${SERVER_PORT}`);
+    console.log("Security hardening enabled: PBKDF2 passwords, hashed sessions, and schema validation.");
+  });
+}
+
+export default app;
