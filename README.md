@@ -292,6 +292,7 @@ CompliPay AI/
 â”œâ”€â”€ ðŸ“„ index.html                    # HTML entry point
 â”œâ”€â”€ ðŸ“„ package.json                  # Dependencies and scripts
 â”œâ”€â”€ ðŸ“„ vite.config.ts                # Vite + React + Tailwind config
+â”œâ”€â”€ ðŸ“„ vercel.json                   # SPA rewrite config for Vercel
 â”œâ”€â”€ ðŸ“„ tsconfig.json                 # TypeScript configuration
 â”œâ”€â”€ ðŸ“„ .env.example                  # Environment variable template
 â”œâ”€â”€ ðŸ“„ .gitignore                    # Git ignore rules
@@ -431,6 +432,9 @@ npm run dev
 Copy `.env.example` to `.env` and configure:
 
 ```env
+# â”€â”€â”€ Frontend Configuration (for separate frontend/backend domains) â”€â”€â”€â”€â”€â”€
+VITE_API_BASE_URL=                      # Example: https://your-backend.example.com
+
 # â”€â”€â”€ Server Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 SERVER_PORT=8787                         # API server port
 SESSION_TTL_HOURS=24                     # Session duration
@@ -438,6 +442,7 @@ AUTH_PASSWORD_SALT=change-this-salt      # Legacy fallback salt for old hashes
 AUTH_PBKDF2_ITERATIONS=210000            # PBKDF2 iteration count
 SESSION_TOKEN_PEPPER=change-this-session-pepper  # Pepper used to hash session tokens at rest
 TRUST_PROXY=false                        # Explicit proxy trust control
+CORS_ORIGIN=*                            # Comma-separated origins for browser API calls
 
 # â”€â”€â”€ AI Configuration (Required for AI features) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 DASHSCOPE_API_KEY=your_key_here          # Alibaba DashScope API key
@@ -461,7 +466,11 @@ SPL_DEFAULT_DECIMALS=6                   # Decimals used for demo SPL mint
 MEMO_PROGRAM_ID=MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr
 ```
 
-> **Note:** The AI chat feature requires a valid `DASHSCOPE_API_KEY`. All other features work without external API keys.
+> **Note:**  
+> - The AI chat feature requires a valid `DASHSCOPE_API_KEY`.  
+> - If frontend and backend are deployed on different domains (for example Vercel frontend + external API), set:
+>   - `VITE_API_BASE_URL` on the frontend deployment.
+>   - `CORS_ORIGIN` on the backend deployment (set to the frontend URL).
 
 ---
 

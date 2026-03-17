@@ -1,8 +1,15 @@
 const TOKEN_KEY = 'complipay_auth_token';
 let inMemoryToken: string | null = null;
+const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '');
 
 function canUseStorage() {
   return typeof window !== 'undefined';
+}
+
+function resolveApiUrl(path: string) {
+  if (/^https?:\/\//i.test(path)) return path;
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return API_BASE_URL ? `${API_BASE_URL}${normalizedPath}` : normalizedPath;
 }
 
 function readSessionToken(): string | null {
@@ -78,7 +85,7 @@ export async function apiRequest<T>(
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(path, {
+  const response = await fetch(resolveApiUrl(path), {
     ...options,
     headers,
   });

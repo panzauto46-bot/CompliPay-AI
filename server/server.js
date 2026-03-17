@@ -46,6 +46,7 @@ const AI_SYSTEM_PROMPT =
 const COMPLIANCE_PROVIDER_URL = process.env.COMPLIANCE_PROVIDER_URL || "";
 const COMPLIANCE_PROVIDER_KEY = process.env.COMPLIANCE_PROVIDER_KEY || "";
 const TRUST_PROXY = process.env.TRUST_PROXY;
+const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 const SOLANA_WALLET_CLUSTER = process.env.SOLANA_WALLET_CLUSTER || "devnet";
 const SOLANA_RPC_ENDPOINT = process.env.SOLANA_RPC_ENDPOINT || "";
 const USDC_TOKEN_MINT = process.env.USDC_TOKEN_MINT || "";
@@ -231,6 +232,16 @@ function resolveTrustProxy(value) {
   if (lower === "false") return false;
   if (/^\d+$/.test(normalized)) return Number(normalized);
   return normalized;
+}
+
+function resolveCorsOrigins(value) {
+  if (value === undefined || value === null) return ["*"];
+  const normalized = String(value).trim();
+  if (!normalized) return ["*"];
+  return normalized
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
 }
 
 function normalizeClientIp(req) {
@@ -1176,6 +1187,32 @@ async function refreshWalletBalances() {
 
 const app = express();
 app.set("trust proxy", resolveTrustProxy(TRUST_PROXY));
+const corsOrigins = resolveCorsOrigins(CORS_ORIGIN);
+const allowAnyCorsOrigin = corsOrigins.includes("*");
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (!origin) {
+    if (req.method === "OPTIONS") return res.status(204).end();
+    return next();
+  }
+
+  const isAllowedOrigin = allowAnyCorsOrigin || corsOrigins.includes(origin);
+  if (isAllowedOrigin) {
+    res.setHeader("Access-Control-Allow-Origin", allowAnyCorsOrigin ? "*" : origin);
+    if (!allowAnyCorsOrigin) {
+      res.setHeader("Vary", "Origin");
+    }
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Max-Age", "86400");
+  }
+
+  if (req.method === "OPTIONS") {
+    return res.status(isAllowedOrigin ? 204 : 403).end();
+  }
+
+  return next();
+});
 app.use(express.json({ limit: "1mb" }));
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
