@@ -28,10 +28,10 @@ export default function Login() {
   const mapLoginError = (err: unknown) => {
     const message = err instanceof Error ? err.message : 'Login failed.';
     if (message.includes('(405)')) {
-      return 'Backend API belum aktif/terhubung. Periksa deploy API dan VITE_API_BASE_URL.';
+      return 'Backend API is not active/reachable. Check API deployment and VITE_API_BASE_URL.';
     }
     if (message.includes('Failed to fetch')) {
-      return 'Tidak bisa terhubung ke backend API. Cek URL backend dan CORS.';
+      return 'Cannot connect to backend API. Check backend URL and CORS.';
     }
     return message;
   };
@@ -56,7 +56,7 @@ export default function Login() {
         className="fixed top-6 left-6 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-200 hover:text-white hover:bg-slate-800 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        <span className="hidden sm:inline">Kembali ke Landing</span>
+        <span className="hidden sm:inline">Back to Landing</span>
       </Link>
 
       <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
