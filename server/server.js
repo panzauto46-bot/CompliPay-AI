@@ -948,7 +948,11 @@ function seedDatabase() {
 }
 
 seedDatabase();
-await pushSqliteSnapshot();
+if (remoteSnapshotEnabled) {
+  // Best-effort snapshot on startup; never block API boot.
+  sqliteDirty = true;
+  flushSqliteSnapshotSoon();
+}
 
 function appendAuditEvent({ category, action, message, paymentId, transactionId, userId }) {
   const id = randomId("audit");
