@@ -40,7 +40,7 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const userName = user?.name || 'User';
@@ -60,6 +60,14 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="app-theme min-h-screen bg-slate-950">
+      {/* Desktop hover trigger (opens sidebar when cursor reaches left edge) */}
+      {!desktopSidebarOpen && (
+        <div
+          className="hidden lg:block fixed top-0 left-0 h-full w-4 z-40"
+          onMouseEnter={() => setDesktopSidebarOpen(true)}
+        />
+      )}
+
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -70,6 +78,8 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Sidebar */}
       <aside
+        onMouseEnter={() => setDesktopSidebarOpen(true)}
+        onMouseLeave={() => setDesktopSidebarOpen(false)}
         className={`fixed top-0 left-0 z-50 h-full w-64 bg-slate-900 border-r border-slate-800 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } ${desktopSidebarOpen ? 'lg:translate-x-0' : 'lg:-translate-x-full'}`}
