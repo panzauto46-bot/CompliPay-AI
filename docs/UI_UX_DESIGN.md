@@ -1,35 +1,36 @@
-﻿# CompliPay AI UI/UX Design Blueprint (v2)
+# CompliPay AI UI/UX Design Blueprint (v3)
 
-Updated: March 17, 2026 (implementation-aligned)
+Updated: March 19, 2026 (Asia/Jakarta)
 
-This document maps UX intent to the current product state in repository.
+This document maps UX intent to the current deployed product behavior.
 
 ## 1) Design Objectives
 
-- Deliver a trusted institutional interface for stablecoin operations.
-- Keep compliance outcomes visible before execution actions.
-- Make the payment flow clear: create -> verify -> decide -> execute -> audit.
-- Present on-chain evidence and audit context in one navigation system.
+- Deliver a trust-first institutional operations interface.
+- Keep policy and compliance status close to action buttons.
+- Make end-to-end flow explicit: create -> evaluate -> decide -> execute -> audit.
+- Keep evidence visible without leaving the main workflow.
 
 ## 2) UX Principles
 
-- Trust first: compliance and risk status are always visible near actions.
-- Fast operations: high-frequency actions are reachable quickly from Payments and Dashboard.
-- Human control: AI gives guidance, but policy and user role still govern execution.
-- Explainability: compliance decisions include reasons and severity context.
-- Evidence by default: transaction/audit references are surfaced in operational views.
+- Policy first: execution is visually and functionally gated by compliance.
+- Operational speed: frequent actions are one or two clicks away.
+- Explainability: decisions include score and reason text.
+- Human-in-the-loop AI: AI recommends; policy and role still decide.
+- Evidence continuity: transaction and audit references remain connected.
 
-## 3) Role-Based Experience
+## 3) Role-Based UX
 
-- Admin/operator:
-  - Can create payments, run compliance, request recommendations, execute, resolve alerts, refresh wallets.
-- Viewer:
-  - Read-only access for sensitive operational surfaces.
-  - UI now explicitly hides or disables privileged controls in key screens.
+### Admin and operator
+- Can create payments, run compliance, request recommendation, execute, resolve alerts, refresh wallets.
+
+### Viewer
+- Read-only posture for privileged action surfaces.
+- Mutation controls hidden or disabled where appropriate.
 
 ## 4) Information Architecture
 
-Main navigation:
+Primary navigation:
 - Dashboard
 - Payments
 - Compliance
@@ -40,94 +41,103 @@ Main navigation:
 - Settings
 
 Supporting routes:
-- Landing
-- Login
+- Landing (`/`)
+- Login (`/login`)
 
-## 5) Primary Demo Flow
+## 5) Current Interaction Patterns
 
-1. Sign in as admin or operator.
-2. Open Payments and create a programmable payment.
-3. Run compliance and inspect decision/reasons.
+### Sidebar behavior
+- Desktop: sidebar opens on hover from left edge and auto-hides on mouse leave.
+- Mobile: sidebar opens with menu button and closes with backdrop/toggle.
+
+### Login behavior
+- Password visibility toggle (eye icon).
+- Back navigation button: `Back to Landing`.
+- Friendly backend connectivity error hints.
+
+### Payments behavior
+- Create modal validates required fields.
+- Decision badges: `ALLOW`, `REVIEW`, `BLOCK`, `Not Checked`.
+- Batch action only executes eligible `ALLOW` items.
+
+## 6) Primary Demo Flow (Current)
+
+1. Login as admin.
+2. Create payment contract.
+3. Run compliance and inspect decision/score.
 4. Request AI recommendation.
-5. Execute payment (manual or AI mode).
-6. Verify transaction evidence in Transactions.
-7. Verify lifecycle evidence in Audit Trail.
+5. Execute payment.
+6. Verify evidence in Transactions.
+7. Verify lifecycle in Audit Trail.
 
-## 6) Screen Blueprint (Current)
+## 7) Screen Blueprint (Current)
 
-### A) Login and Session
-- Email/password sign-in with demo credentials.
-- Session-backed protected navigation.
+### A) Login
+- Email/password auth
+- Demo credential shortcuts
+- Session-aware redirect
 
 ### B) Dashboard
-- KPI cards and chart summaries.
-- Recent transactions and compliance alerts.
+- KPI overview
+- Volume chart
+- Recent transactions and alerts
 
 ### C) Payments
-- Payment list with filters/search.
-- Create modal with policy fields.
-- Compliance, recommendation, and execution controls.
-- Batch execution controls for privileged roles.
+- Filter/search
+- Create modal
+- Compliance/AI/execute controls
+- Batch selection and batch execute
 
 ### D) Compliance
-- Alert monitoring and severity/status views.
-- Alert detail modal and resolve action (privileged roles only).
+- Alert list by severity/status
+- Resolve action for privileged roles
 
 ### E) AI Agent
-- Live chat panel (authenticated backend proxy).
-- Task visualization for automation themes.
+- Authenticated chat panel
+- Task cards and operational context
 
 ### F) Transactions
-- Filterable transaction list.
-- Evidence modal with explorer linkage and export support.
+- Filterable table
+- Evidence modal and CSV export
 
 ### G) Wallets
-- Wallet inventory and balance refresh.
-- Read-only vs manage actions based on role.
+- Wallet cards and refresh
+- Role-aware operational actions
 
-## 7) Visual Direction
+### H) Settings
+- Profile/security/integration shell
+- Still partly demo-oriented
 
-- Dark institutional base with strong contrast hierarchy.
-- Status semantics:
-  - Green for pass/healthy states,
-  - Amber for review/investigation,
-  - Red for block/high risk,
-  - Cyan/violet for AI and action emphasis.
-- Dense but readable layout tuned for operations dashboard behavior.
+## 8) Visual Direction
 
-## 8) Motion and Interaction
-
-- Lightweight transitions for cards, modals, and action feedback.
-- Avoid decorative-only motion; prioritize operational clarity.
-- Action buttons reflect in-progress states where applicable.
+- Dark institutional base and high contrast hierarchy.
+- Semantic states:
+  - Green: allow/success/healthy
+  - Amber: review/investigating
+  - Red: blocked/high risk
+  - Cyan/Violet: action and AI emphasis
 
 ## 9) Responsive Strategy
 
 - Desktop-first operations layout.
-- Mobile support via collapsible sidebar and stacked content.
-- Tables and evidence views remain accessible on smaller screens.
+- Mobile uses stacked content and collapsible navigation.
+- Core actions remain reachable on smaller screens.
 
-## 10) Accessibility and Compliance UX
+## 10) Accessibility Notes
 
-- Core action paths remain keyboard reachable.
-- Critical statuses use text labels in addition to color.
-- Compliance reasons are displayed as readable text lists.
-- Timestamp presentation should stay explicit in future timezone enhancement work.
+- Core flows remain keyboard reachable.
+- Status is conveyed by text labels, not color only.
+- Error messages are explicit and readable.
 
-## 11) Implementation Notes and Gaps
+## 11) Current UX Gaps
 
-Implemented and aligned:
-- Role-aware operational gating.
-- Policy-first flow in payment execution UX.
-- Evidence-centric transaction and audit surfaces.
-
-Still limited:
-- Settings area remains partly presentation-level.
-- Some integration controls in wallet/settings are still demo-oriented.
+- Settings depth remains limited.
+- Some integration forms are still placeholders.
+- Advanced evidence workflows can be expanded for enterprise reporting.
 
 ## 12) Handoff Outputs
 
-- `docs/UI_UX_DESIGN.md` (this document)
+- `docs/UI_UX_DESIGN.md`
 - `design-system/tokens.css`
 - `prototype/index.html`
 - `prototype/styles.css`

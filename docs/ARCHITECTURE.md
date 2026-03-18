@@ -1,57 +1,56 @@
-﻿# CompliPay AI Architecture
+# CompliPay AI Architecture
 
-Updated: March 17, 2026 (Asia/Jakarta)
+Updated: March 19, 2026 (Asia/Jakarta)
+Version: v3 (Vercel + persistence sync)
 
 ## 1) System Overview
 
-CompliPay AI uses a fullstack architecture (React + Express + SQLite + Solana RPC).
+CompliPay AI runs as a full-stack product:
+- Frontend: React + TypeScript (Vite)
+- API: Express (`server/server.js`)
+- Primary storage: SQLite (`server/data/complipay.db`)
+- Optional durability layer: Postgres snapshot mirror via `DATABASE_URL`
+- Chain integration: Solana execution path with simulation fallback
+- AI integration: DashScope-compatible chat completion endpoint
 
-Layers:
-- Presentation: React app (`src/`) with protected routes and role-aware UI.
-- Application API: Express server (`server/server.js`) for auth, payments, compliance, execution, AI proxy, wallets, and audit logging.
-- Persistence: SQLite (`server/data/complipay.db`) with WAL mode.
-- Blockchain: Solana testnet/devnet execution with simulated fallback.
-- External services: DashScope-compatible LLM endpoint and optional compliance provider endpoint.
+Goal: enforce policy-first programmable payments with clear audit evidence.
 
 ## 2) Runtime Components
 
-### Frontend
-- `src/context/AuthContext.tsx`
-  - Login/logout/session refresh.
-  - Auth state for route protection.
-- `src/context/AppDataContext.tsx`
-  - Bootstrap data loading.
-  - Mutations for payment lifecycle, compliance, execution, alerts, wallets, and audit updates.
-- `src/lib/api.ts`
-  - Bearer token request wrapper.
-  - Token persistence using `sessionStorage` with legacy migration from `localStorage`.
+### Frontend (`src/`)
+- `context/AuthContext.tsx`
+  - login/logout/session refresh
+  - protected-route auth state
+- `context/AppDataContext.tsx`
+  - `/api/bootstrap` hydration
+  - payment/compliance/execution/wallet/audit mutations
+- `pages/*`
+  - operational surfaces: Dashboard, Payments, Compliance, AI Agent, Audit Trail, Transactions, Wallets, Settings
+  - public surfaces: Landing, Login
+- `components/Layout.tsx`
+  - desktop hover sidebar behavior
+  - role-consistent navigation shell
 
-### Backend
-- `server/server.js` (single-file service)
-  - Auth:
-    - PBKDF2 password verification with legacy SHA-256 compatibility migration.
-    - Session token hashing at rest (SQLite stores hashed token).
-  - Authorization:
-    - RBAC on privileged mutation endpoints (`admin`, `operator`).
-    - Viewer role is read-only in UI and blocked on privileged APIs.
-  - Compliance:
-    - Deterministic policy checks (KYC, KYT, AML, Travel Rule).
-    - Optional external compliance provider call.
-  - Execution:
-    - Policy-gated payment execution.
-    - Solana testnet first, devnet fallback, simulation fallback.
-    - Batch execution endpoint with per-item result summary.
-  - AI:
-    - Authenticated chat proxy with user+IP rate limit strategy.
-  - Wallets:
-    - Balance refresh from RPC.
-    - SPL balance path for USDC/USDT when mint env vars are configured.
-  - Audit:
-    - Append-only event logging linked to payment and/or transaction IDs.
+### API backend (`server/server.js`)
+Single service currently contains:
+- authentication and session lifecycle
+- RBAC middleware
+- validation and rate limiting
+- payments/compliance/execution logic
+- AI proxy
+- wallet refresh
+- audit append pipeline
 
-## 3) Data Model (SQLite)
+### Vercel adapter (`api/`)
+- `api/index.js` rewrites `/api/:path*` requests to Express format
+- `api/_app.js` exposes Express app handler
+- `vercel.json` rewrites all non-API routes to `index.html`
 
-Tables:
+This allows one Vercel project to host both SPA and API under the same origin.
+
+## 3) Data and Persistence Model
+
+### SQLite tables
 - `users`
 - `sessions`
 - `payments`
@@ -60,51 +59,85 @@ Tables:
 - `ai_tasks`
 - `wallets`
 - `audit_events`
+- `app_state_snapshots` (used when remote snapshot persistence is enabled)
 
-Key model notes:
-- `sessions.token` stores hashed tokens.
-- `payments.compliance_result_json` stores compliance decisions and reasons.
-- `transactions` tracks execution network, simulation status, asset layer, and batch ID.
-- `audit_events` is the main traceability ledger for operations and policy actions.
+### Persistence behavior
+- Base mode: SQLite only (`persistence: "sqlite"` in health response).
+- Extended mode: SQLite plus periodic snapshot to Postgres when `DATABASE_URL` is set (`persistence: "sqlite+postgres-snapshot"`).
 
-## 4) End-to-End Flow
+Health endpoint:
+- `GET /api/health` returns `ok`, `aiConfigured`, `model`, and `persistence`.
 
-1. User signs in with email/password.
-2. Frontend stores auth token in session scope and loads `/api/bootstrap`.
-3. Operator/admin creates payment contract.
-4. Compliance is evaluated (`allow`, `review`, `block`).
-5. AI recommendation can be requested (policy-constrained guidance).
-6. Execution is allowed only when compliance decision is `allow`.
-7. Transaction evidence and audit events are persisted and reflected in UI.
+## 4) API Surface
 
-## 5) Security Model
+### Public
+- `GET /api/health`
+- `POST /api/auth/login`
+
+### Authenticated
+- `GET /api/auth/me`
+- `POST /api/auth/logout`
+- `GET /api/bootstrap`
+- `POST /api/ai/chat`
+
+### Admin/Operator only
+- `POST /api/payments`
+- `POST /api/payments/:id/compliance`
+- `POST /api/payments/:id/ai-recommendation`
+- `POST /api/payments/:id/execute`
+- `POST /api/payments/batch-execute`
+- `POST /api/compliance/alerts/:id/resolve`
+- `POST /api/wallets/refresh`
+
+## 5) End-to-End Execution Flow
+
+1. User signs in on `/login`.
+2. Frontend stores bearer token in `sessionStorage` and loads `/api/bootstrap`.
+3. User creates a payment contract.
+4. Compliance engine evaluates and returns `allow/review/block` with reasons.
+5. AI recommendation can be requested (policy does not get bypassed).
+6. Execution is allowed only for `allow` decisions.
+7. Transaction evidence and audit events are persisted and rendered in UI.
+
+Batch mode:
+- Only selected payments with `allow` decision are eligible for batch execution.
+- API returns per-item result summary (`completed/simulated/failed`).
+
+## 6) Security Model
 
 Implemented controls:
-- PBKDF2 password hashing (`AUTH_PBKDF2_ITERATIONS`), legacy hash migration support.
+- PBKDF2 password hashing (`AUTH_PBKDF2_ITERATIONS`) with legacy hash migration support.
 - Hashed session tokens at rest (`SESSION_TOKEN_PEPPER`).
-- Schema-based payload validation for critical endpoints.
-- Explicit proxy trust control (`TRUST_PROXY`).
+- RBAC enforcement for privileged endpoints.
+- Input schema validation on critical mutations.
 - Rate limiting:
-  - Login endpoint keyed by IP.
-  - Authenticated AI chat endpoint keyed by user+IP.
+  - login endpoint keyed by client IP
+  - AI chat keyed by user+IP
+- Explicit proxy trust (`TRUST_PROXY`) for correct IP handling.
 - Security headers:
   - `X-Content-Type-Options: nosniff`
   - `X-Frame-Options: DENY`
   - `Referrer-Policy: no-referrer`
 
-## 6) Known Limitations
+## 7) UI/UX State Relevant to Architecture
 
-Current limitations:
-- Server remains monolithic in a single file.
-- No automated test suite in repository.
-- No OpenAPI spec generation.
-- Wallet accuracy for USDC/USDT depends on mint env configuration.
-- Settings and some integration screens remain partially presentation-focused.
+- Desktop sidebar supports hover-open and auto-hide behavior.
+- Login page includes password visibility control and back-to-landing navigation.
+- Privileged action buttons are hidden/disabled for viewer role.
+- Evidence-first views: Transactions and Audit Trail are linked to each execution lifecycle.
 
-## 7) Next Hardening Targets
+## 8) Current Limitations
 
-Planned:
-- Break server into route/service modules.
-- Add integration tests for auth/compliance/execution.
-- Add structured logs and error telemetry.
-- Add provider-level wallet/compliance integrations for pilot readiness.
+- Backend is monolithic in one file (`server/server.js`).
+- Automated integration tests are still limited.
+- OpenAPI contract is not published.
+- Settings and some integration forms remain partly demo-oriented.
+- Provider-grade external connectors are still shallow.
+
+## 9) Next Hardening Targets
+
+1. Split backend into route/service modules.
+2. Add integration smoke tests for auth/compliance/execution.
+3. Add structured logs and observability for production diagnostics.
+4. Deepen wallet/compliance provider integrations.
+5. Publish machine-readable API contract.

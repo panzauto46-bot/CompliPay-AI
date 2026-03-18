@@ -1,45 +1,58 @@
-﻿# StableHacks Submission Checklist
+# StableHacks Submission Checklist
+
+Updated: March 19, 2026 (Asia/Jakarta)
 
 Use this checklist before final lock-in on DoraHacks.
 
 ## 1) Team Metadata
-- [ ] Project name is `CompliPay AI`.
-- [ ] Team member list is complete.
-- [ ] Country and contact details are complete.
+
+- [ ] Project name set to `CompliPay AI`
+- [ ] Team member list finalized
+- [ ] Country/contact fields verified
 
 ## 2) Required Links
-- [ ] Public GitHub repository URL is valid.
-- [ ] Loom demo URL is available (max 3 minutes).
-- [ ] Public demo URL or technical overview video URL is available.
+
+- [x] Public GitHub repository URL valid
+- [ ] Final Loom demo URL (max 3 minutes) added
+- [x] Public demo URL valid (`https://compli-pay-ai.vercel.app/`)
 
 ## 3) Product Validation
-- [ ] At least one payment execution flow is demonstrated.
-- [ ] Compliance decision flow is shown (`ALLOW`, `REVIEW`, `BLOCK`).
-- [ ] Transaction hash and explorer link are visible.
-- [ ] Audit trail evidence is shown in the demo.
+
+- [x] Payment create flow validated
+- [x] Compliance decision flow validated (`ALLOW`, `REVIEW`, `BLOCK`)
+- [x] Transaction evidence visible
+- [x] Audit trail evidence visible
+- [x] Batch execute flow validated for `ALLOW`-eligible items
 
 ## 4) Security and Deployment Readiness
-- [ ] Backend deployment is confirmed for `/api/*` runtime.
-- [ ] Required security env vars are set:
-  - [ ] `AUTH_PBKDF2_ITERATIONS`
-  - [ ] `SESSION_TOKEN_PEPPER`
-  - [ ] `TRUST_PROXY`
-- [ ] Optional wallet mint env vars are reviewed (`USDC_TOKEN_MINT`, `USDT_TOKEN_MINT`).
-- [ ] Security rollout runbook reviewed (`docs/SECURITY_ROLLOUT_RUNBOOK.md`).
+
+- [x] `/api/*` backend runtime verified on Vercel
+- [x] `/api/health` returns `ok: true`
+- [x] Persistence mode verified (`sqlite+postgres-snapshot` when `DATABASE_URL` set)
+- [x] Required security env vars present:
+  - [x] `AUTH_PBKDF2_ITERATIONS`
+  - [x] `SESSION_TOKEN_PEPPER`
+  - [x] `TRUST_PROXY`
+- [x] Security rollout runbook reviewed (`docs/SECURITY_ROLLOUT_RUNBOOK.md`)
 
 ## 5) Documentation Sync Gate
-- [ ] `README.md` is aligned with current implementation.
-- [ ] `docs/ARCHITECTURE.md` is aligned with backend-driven architecture.
-- [ ] `docs/ROADMAP.md` and audit docs reflect current status.
-- [ ] `docs/PROJECT_COMPLETION_AUDIT.md` matches latest weighted readiness values.
-- [ ] UI/UX and demo flow docs are still accurate.
+
+- [x] `README.md` aligned to deployed implementation
+- [x] `docs/ARCHITECTURE.md` aligned to current runtime model
+- [x] `docs/ROADMAP.md` aligned to latest status
+- [x] `docs/PROJECT_COMPLETION_AUDIT.md` aligned to latest readiness estimate
+- [x] `docs/PROJECT_AUDIT_REPORT.md` aligned to latest findings
+- [x] `docs/UI_UX_DESIGN.md` aligned to current UX behavior
+- [x] `docs/DEMO_RUNBOOK.md` aligned to current demo steps
 
 ## 6) Demo Dry-Run Gate
-- [ ] Dry-run #1 completed without blocker.
-- [ ] Dry-run #2 completed without blocker.
-- [ ] Dry-run #3 completed without blocker.
 
-## 7) Final Submission
-- [ ] All DoraHacks fields reviewed for accuracy.
-- [ ] Submission completed before deadline lock.
-- [ ] Final confirmation screenshot and links archived.
+- [ ] Dry-run #1 completed end-to-end
+- [ ] Dry-run #2 completed end-to-end
+- [ ] Dry-run #3 completed end-to-end
+
+## 7) Final Submission Lock
+
+- [ ] All DoraHacks fields reviewed one final time
+- [ ] Submission completed before deadline lock
+- [ ] Final confirmation screenshots and links archived

@@ -1,99 +1,79 @@
-﻿# CompliPay AI - Full Project Audit Report
+# CompliPay AI - Full Project Audit Report
 
-Audit Date: March 17, 2026 (Asia/Jakarta)
+Audit Date: March 19, 2026 (Asia/Jakarta)
 Hackathon: StableHacks 2026
 Track: Programmable Stablecoin Payments
-
----
 
 ## 1) Executive Summary
 
 Current state:
-- Demo readiness: high.
-- Production readiness estimate: about 86%.
-- Security posture improved materially in latest patch set.
-- Primary remaining risks are operational (testing depth, deployment verification, submission finalization), not core feature gaps.
-
----
+- Demo readiness: very high.
+- Production-demo readiness estimate: about 90%.
+- Backend runtime on Vercel `/api/*`: verified.
+- Persistence snapshot mode (`DATABASE_URL`): verified.
+- Remaining risks are mostly engineering-hardening and submission packaging tasks.
 
 ## 2) Documentation Synchronization Status
 
 | Document | Sync Status | Notes |
 |---|---|---|
-| `README.md` | Synced | Auth/security/env/api sections aligned with current backend behavior. |
-| `docs/ARCHITECTURE.md` | Synced | Updated to fullstack API-backed architecture (not frontend-only). |
-| `docs/ROADMAP.md` | Synced | Updated phase status and readiness estimates. |
-| `docs/PROJECT_COMPLETION_AUDIT.md` | Synced | Weighted completion model aligned with roadmap. |
-| `docs/PROJECT_AUDIT_REPORT.md` | Synced | Rebased to current implementation and security patch status. |
-| `docs/SECURITY_ROLLOUT_RUNBOOK.md` | Synced | Covers migration, rotation, rollback, and verification. |
-| `docs/SUBMISSION_CHECKLIST.md` | Synced | Includes security/deployment gates and doc-sync verification. |
-| `docs/UI_UX_DESIGN.md` | Synced | Explicitly documents role-gating and current API-backed demo flow. |
+| `README.md` | Synced | Updated deployment, API, env vars, and readiness snapshot. |
+| `docs/ARCHITECTURE.md` | Synced | Covers Vercel API adapter and snapshot persistence model. |
+| `docs/ROADMAP.md` | Synced | Updated to 90% readiness baseline and latest UI updates. |
+| `docs/PROJECT_COMPLETION_AUDIT.md` | Synced | Weighted score aligned to current state (~90%). |
+| `docs/PROJECT_AUDIT_REPORT.md` | Synced | This report aligned to latest verified runtime behavior. |
+| `docs/SECURITY_ROLLOUT_RUNBOOK.md` | Synced | Includes Vercel + Supabase session-pooler deployment path. |
+| `docs/SUBMISSION_CHECKLIST.md` | Synced | Checklist now matches latest gates and validation flow. |
+| `docs/UI_UX_DESIGN.md` | Synced | Includes sidebar hover behavior and login back-to-landing UX. |
 
----
+## 3) Verified Security and Platform Controls
 
-## 3) Security and Platform Hardening Verified
-
-Implemented:
-- RBAC tightened for AI recommendation mutation endpoint.
-- PBKDF2 password hashing with legacy SHA-256 compatibility migration.
-- Session token hashing at rest in SQLite.
-- Schema-based payload validation on critical endpoints.
-- Explicit proxy trust configuration via env (`TRUST_PROXY`).
-- Rate limiting hardened:
+Implemented and observed:
+- RBAC on privileged mutation endpoints.
+- PBKDF2 password hashing with legacy migration fallback.
+- Session token hashing at rest.
+- Payload schema validation on critical mutations.
+- Explicit `TRUST_PROXY` handling for accurate rate limit IP behavior.
+- Rate limiting:
   - login: IP-based
-  - authenticated AI chat: user+IP
-- Viewer role enforced as read-only on sensitive UI actions.
-- Security rollout runbook added for deployment/migration operations.
-
----
+  - AI chat: user+IP-based
+- Security headers enabled.
+- Viewer role blocked from create/execute/mutate operations.
 
 ## 4) Functional Coverage Snapshot
 
-- Payments: create, compliance, recommendation, execution, batch execution.
-- Compliance: deterministic allow/review/block with alert persistence.
-- AI: authenticated chat proxy and guarded recommendation flow.
-- Wallets: refresh path improved with optional SPL mint-aware balance checks.
-- Audit: append-only evidence chain tied to payment/transaction IDs.
+- Payments: create, run compliance, AI recommendation, execute, batch execute.
+- Compliance: deterministic decisions with persistent alerts and resolve action.
+- AI: authenticated chat proxy with provider configuration checks.
+- Transactions: evidence-rich rows and CSV export.
+- Audit trail: append-only lifecycle history tied to payment/transaction IDs.
 
-Overall: core product narrative is coherent and demo-credible.
+Overall: product narrative is coherent, demo-safe, and operationally consistent.
 
----
-
-## 5) Open Findings (Ordered by Priority)
+## 5) Open Findings (Priority Order)
 
 ### High
-1. Automated tests are still absent.
-   - Risk: regression risk increases with rapid iteration.
-2. Backend is still monolithic in one large server file.
-   - Risk: maintainability and reviewability constraints.
+1. Automated integration test coverage is still limited.
+2. Backend service is monolithic (`server/server.js`) and should be modularized.
 
 ### Medium
-1. Production deployment verification remains external/team-dependent.
-   - Risk: mismatch between local behavior and hosted runtime.
-2. Stablecoin wallet balance accuracy depends on mint env values.
-   - Risk: incorrect displayed balances when mint vars are not configured.
-3. No published OpenAPI contract.
-   - Risk: integration friction for external consumers.
+1. OpenAPI contract is not published.
+2. Wallet/provider integrations are still shallow for pilot-grade environments.
+3. Settings and some integration surfaces remain partially demo-oriented.
 
 ### Low
-1. Settings/integration surfaces are partly presentation-level.
-2. Advanced audit export formats (beyond CSV) are not yet implemented.
+1. Advanced audit export bundles (beyond CSV) are not yet implemented.
+2. Observability depth can be expanded (structured logs, richer telemetry).
 
----
+## 6) Recommended Actions Before Final Submission Lock
 
-## 6) Recommended Actions Before Final Submission
-
-1. Run a minimum integration test pass for auth + compliance + execution APIs.
-2. Verify production env parity:
-   - `AUTH_PBKDF2_ITERATIONS`
-   - `SESSION_TOKEN_PEPPER`
-   - `TRUST_PROXY`
-   - optional `USDC_TOKEN_MINT` and `USDT_TOKEN_MINT`
-3. Perform 3 full demo dry-runs using `docs/DEMO_RUNBOOK.md`.
-4. Finalize submission artifacts (Loom, team metadata, final proof capture).
-
----
+1. Run repeatable smoke tests for auth/compliance/execution/batch flows.
+2. Record final 3-minute Loom using the runbook.
+3. Capture final submission proof artifacts (links + screenshots).
+4. Freeze final env var map and owners for post-submission support.
 
 ## 7) Final Verdict
 
-CompliPay AI is in a strong state for hackathon judging: real backend orchestration, policy-first execution controls, and credible auditability. The remaining work is mostly operational hardening and submission logistics, not fundamental product capability gaps.
+CompliPay AI is in a strong hackathon-ready state with real backend orchestration,
+policy-first execution control, and auditable transaction evidence.
+The remaining work is mainly hardening and submission logistics, not core capability gaps.

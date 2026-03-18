@@ -1,98 +1,103 @@
 # CompliPay AI Security Rollout Runbook
 
+Updated: March 19, 2026 (Asia/Jakarta)
+
 ## Scope
 
-This runbook covers rollout and operations for:
-- PBKDF2 password hashing with legacy SHA-256 compatibility.
-- Hashed session tokens stored at rest in SQLite.
-- Tighter RBAC on privileged mutation endpoints.
-- Safer rate limiting with explicit proxy trust configuration.
+This runbook covers deployment and operations for:
+- PBKDF2 password hashing and legacy migration path
+- hashed session tokens at rest
+- RBAC-protected mutation endpoints
+- rate limiting with explicit proxy trust
+- Vercel deployment with optional Postgres snapshot persistence
 
-## Required Environment Variables
+## 1) Required Environment Variables
 
-Configure these before deployment:
+Set these in Vercel (Production, Preview, Development as needed):
+
 - `AUTH_PASSWORD_SALT`
-- `AUTH_PBKDF2_ITERATIONS`
+- `AUTH_PBKDF2_ITERATIONS` (recommended `210000`)
 - `SESSION_TOKEN_PEPPER`
-- `TRUST_PROXY`
-- `SERVER_PORT`
-- `SESSION_TTL_HOURS`
+- `SESSION_TTL_HOURS` (recommended `24`)
+- `TRUST_PROXY` (`1` for Vercel)
+- `DASHSCOPE_API_KEY`
+- `AI_BASE_URL`
+- `AI_MODEL`
 
-Optional but recommended for wallet accuracy:
+Recommended:
+- `DATABASE_URL` (Supabase session pooler URI for persistence snapshot)
+- `CORS_ORIGIN` (restrict origins if needed)
 - `USDC_TOKEN_MINT`
 - `USDT_TOKEN_MINT`
-- `SOLANA_RPC_ENDPOINT`
 
-Recommended `TRUST_PROXY` values:
-- `false` for direct public API without reverse proxy.
-- `1` when exactly one trusted reverse proxy is in front.
-- explicit subnet/value when infrastructure requires it.
+## 2) `DATABASE_URL` Guidance (Supabase)
 
-## Pre-Deployment Checklist
+Use Session pooler URI (IPv4-friendly):
 
-1. Backup `server/data/complipay.db`.
-2. Confirm all required environment variables are set in the target environment.
-3. Verify `TRUST_PROXY` is explicitly configured.
-4. Validate rollback package is available.
-5. Announce expected authentication behavior change to operators.
+`postgresql://postgres.<project-ref>:<password>@aws-1-<region>.pooler.supabase.com:5432/postgres`
 
-## Deployment Steps
+Notes:
+- Replace `<password>` with your database password.
+- This enables `sqlite+postgres-snapshot` mode in health response.
+- Do not expose this URI client-side.
 
-1. Deploy code and environment variable changes together.
-2. Start the API service and confirm startup log includes security hardening message.
-3. Verify `GET /api/health` returns `ok: true`.
-4. Execute smoke tests:
-   - login success with existing account
-   - protected endpoint access with valid token
-   - role-restricted endpoint blocked for viewer
-   - AI chat endpoint returns rate-limit headers and behaves per user+IP
-5. Monitor 429 responses and auth errors for 15-30 minutes.
+## 3) Pre-Deployment Checklist
 
-## Password Migration Behavior
+1. Confirm all required env vars are set in Vercel.
+2. Confirm `TRUST_PROXY` is explicitly set.
+3. Trigger a fresh deployment after env updates.
+4. Keep rollback point available in Deployments tab.
 
-- Existing SHA-256 legacy password hashes remain valid initially.
-- On successful login, a legacy hash is replaced with PBKDF2 automatically.
-- Keep `AUTH_PASSWORD_SALT` stable until migration window is complete.
+## 4) Post-Deployment Verification
 
-## Session Migration Behavior
+Run these checks on production URL:
 
-- New sessions are stored as hashed tokens.
-- Existing raw-token sessions are migrated to hashed storage on successful request.
-- Logout deletes both hashed and legacy token forms for compatibility.
+1. `GET /api/health` returns:
+   - `ok: true`
+   - `aiConfigured: true` (if key is set)
+   - `persistence: sqlite+postgres-snapshot` (if `DATABASE_URL` configured)
+2. Login works with demo admin account.
+3. Viewer cannot execute privileged mutations.
+4. Admin/operator can create -> run compliance -> execute payment.
+5. AI chat endpoint responds and rate-limit headers are present.
 
-## Force Re-Login Procedure (Optional)
+## 5) Migration Behavior
 
-Use this if you want immediate session invalidation after deployment:
+### Password hashes
+- Legacy SHA-256 passwords remain temporarily valid.
+- On successful login, legacy hash is upgraded to PBKDF2.
+
+### Sessions
+- Sessions are stored as hashed tokens.
+- Legacy/plain session rows are cleaned on logout and migrated on valid request path.
+
+## 6) Optional Force Re-Login Procedure
+
+To invalidate all active sessions:
 
 ```sql
 DELETE FROM sessions;
 ```
 
-Impact:
-- All active users must sign in again.
-- No data loss outside session state.
+Effect: all users must login again.
 
-## Secret Rotation Guidance
+## 7) Secret Rotation Guidance
 
-1. Rotate `SESSION_TOKEN_PEPPER` first only when you are ready to invalidate all sessions.
-2. Rotate `AUTH_PASSWORD_SALT` only after legacy SHA-256 users are migrated or reset.
-3. Keep `AUTH_PBKDF2_ITERATIONS` at or above `120000`.
+1. Rotate `SESSION_TOKEN_PEPPER` when you intentionally want all sessions invalidated.
+2. Rotate `AUTH_PASSWORD_SALT` only after legacy migration/reset planning.
+3. Keep `AUTH_PBKDF2_ITERATIONS` at or above `120000` (project default: `210000`).
 
-## Rollback Plan
+## 8) Rollback Plan
 
-1. Stop service.
-2. Restore previous application build.
-3. Restore previous environment values.
-4. If required, restore database backup.
-5. Restart service and rerun smoke tests.
+1. Open Vercel Deployments.
+2. Roll back to previous healthy deployment.
+3. Re-check env vars if rollback also includes config mismatch.
+4. Validate `/api/health` and login flow again.
 
-## Post-Deployment Verification
+## 9) Operational Watchpoints
 
-1. Confirm viewer cannot execute:
-   - payment create
-   - compliance run
-   - AI recommendation mutation
-   - wallet refresh
-2. Confirm admin/operator flows still succeed.
-3. Confirm AI chat rate limit headers are present.
-4. Confirm payment creation rejects invalid payload formats.
+Monitor for:
+- repeated `401` login failures (credential/env mismatch)
+- repeated `429` responses (rate limiting tuning)
+- model-provider errors on `/api/ai/chat`
+- persistence mode drift (`sqlite` vs `sqlite+postgres-snapshot`)
