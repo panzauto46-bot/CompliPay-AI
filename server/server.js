@@ -1,10 +1,11 @@
 import crypto from "node:crypto";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import express from "express";
 import dotenv from "dotenv";
+import { Pool } from "pg";
 import {
   clusterApiUrl,
   Connection,
@@ -46,6 +47,7 @@ const AI_SYSTEM_PROMPT =
   "You are CompliPay AI assistant for institutional stablecoin operations. Provide concise, compliant guidance focused on KYC, KYT, AML, Travel Rule, settlement, and auditability.";
 const COMPLIANCE_PROVIDER_URL = process.env.COMPLIANCE_PROVIDER_URL || "";
 const COMPLIANCE_PROVIDER_KEY = process.env.COMPLIANCE_PROVIDER_KEY || "";
+const DATABASE_URL = process.env.DATABASE_URL || "";
 const TRUST_PROXY = process.env.TRUST_PROXY;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 const SOLANA_WALLET_CLUSTER = process.env.SOLANA_WALLET_CLUSTER || "devnet";
@@ -65,8 +67,140 @@ const dataDir = process.env.DB_DIR
   : defaultDbDir;
 mkdirSync(dataDir, { recursive: true });
 
-const db = new DatabaseSync(path.join(dataDir, "complipay.db"));
-db.exec("PRAGMA journal_mode = WAL;");
+const sqliteDbPath = path.join(dataDir, "complipay.db");
+const SQLITE_SNAPSHOT_KEY = "complipay-sqlite-main";
+
+let snapshotPool = null;
+let remoteSnapshotEnabled = false;
+let sqliteDirty = false;
+let flushInFlight = null;
+
+function shouldEnableSnapshot(url) {
+  return typeof url === "string" && url.trim().toLowerCase().startsWith("postgres");
+}
+
+function resolvePgSsl(url) {
+  if (!url || /localhost|127\.0\.0\.1/i.test(url)) return undefined;
+  return { rejectUnauthorized: false };
+}
+
+async function initRemoteSnapshot() {
+  if (!shouldEnableSnapshot(DATABASE_URL)) return;
+
+  snapshotPool = new Pool({
+    connectionString: DATABASE_URL,
+    ssl: resolvePgSsl(DATABASE_URL),
+  });
+
+  await snapshotPool.query(`
+    CREATE TABLE IF NOT EXISTS app_state_snapshots (
+      id TEXT PRIMARY KEY,
+      sqlite_blob BYTEA NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  const result = await snapshotPool.query(
+    "SELECT sqlite_blob FROM app_state_snapshots WHERE id = $1 LIMIT 1",
+    [SQLITE_SNAPSHOT_KEY]
+  );
+
+  const row = result.rows[0];
+  if (row?.sqlite_blob) {
+    writeFileSync(sqliteDbPath, row.sqlite_blob);
+    console.log("Loaded SQLite snapshot from Postgres state store.");
+  } else {
+    console.log("No remote SQLite snapshot found. Initializing fresh local state.");
+  }
+
+  remoteSnapshotEnabled = true;
+}
+
+async function pushSqliteSnapshot() {
+  if (!remoteSnapshotEnabled || !snapshotPool) return;
+
+  const sqliteBlob = readFileSync(sqliteDbPath);
+  await snapshotPool.query(
+    `
+      INSERT INTO app_state_snapshots (id, sqlite_blob, updated_at)
+      VALUES ($1, $2, NOW())
+      ON CONFLICT (id)
+      DO UPDATE SET sqlite_blob = EXCLUDED.sqlite_blob, updated_at = NOW()
+    `,
+    [SQLITE_SNAPSHOT_KEY, sqliteBlob]
+  );
+  sqliteDirty = false;
+}
+
+function flushSqliteSnapshotSoon() {
+  if (!remoteSnapshotEnabled || !snapshotPool) return;
+  if (flushInFlight) {
+    sqliteDirty = true;
+    return;
+  }
+
+  flushInFlight = (async () => {
+    do {
+      sqliteDirty = false;
+      await pushSqliteSnapshot();
+    } while (sqliteDirty);
+  })()
+    .catch((error) => {
+      sqliteDirty = true;
+      console.error("Failed to sync SQLite snapshot to Postgres:", error);
+    })
+    .finally(() => {
+      flushInFlight = null;
+      if (sqliteDirty) flushSqliteSnapshotSoon();
+    });
+}
+
+function markSqliteDirty() {
+  if (!remoteSnapshotEnabled) return;
+  sqliteDirty = true;
+  flushSqliteSnapshotSoon();
+}
+
+try {
+  await initRemoteSnapshot();
+} catch (error) {
+  console.error("Remote snapshot init failed, falling back to local SQLite only:", error);
+  remoteSnapshotEnabled = false;
+  if (snapshotPool) {
+    try {
+      await snapshotPool.end();
+    } catch {
+      // Ignore pool close errors during fallback.
+    }
+  }
+  snapshotPool = null;
+}
+
+const db = new DatabaseSync(sqliteDbPath);
+const originalDbExec = db.exec.bind(db);
+const originalDbPrepare = db.prepare.bind(db);
+
+db.exec = (...args) => {
+  const result = originalDbExec(...args);
+  markSqliteDirty();
+  return result;
+};
+
+db.prepare = (...args) => {
+  const statement = originalDbPrepare(...args);
+  return {
+    run: (...params) => {
+      const result = statement.run(...params);
+      markSqliteDirty();
+      return result;
+    },
+    get: (...params) => statement.get(...params),
+    all: (...params) => statement.all(...params),
+  };
+};
+
+const sqliteJournalMode = remoteSnapshotEnabled ? "DELETE" : "WAL";
+db.exec(`PRAGMA journal_mode = ${sqliteJournalMode};`);
 db.exec("PRAGMA foreign_keys = ON;");
 
 db.exec(`
@@ -814,6 +948,7 @@ function seedDatabase() {
 }
 
 seedDatabase();
+await pushSqliteSnapshot();
 
 function appendAuditEvent({ category, action, message, paymentId, transactionId, userId }) {
   const id = randomId("audit");
@@ -1219,6 +1354,20 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: "1mb" }));
 app.use((req, res, next) => {
+  const originalJson = res.json.bind(res);
+  res.json = async (payload) => {
+    if (sqliteDirty) {
+      try {
+        await pushSqliteSnapshot();
+      } catch (error) {
+        console.error("Failed to flush SQLite snapshot before response:", error);
+      }
+    }
+    return originalJson(payload);
+  };
+  next();
+});
+app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "no-referrer");
@@ -1262,7 +1411,7 @@ app.get("/api/health", (_req, res) => {
     ok: true,
     aiConfigured: Boolean(AI_API_KEY),
     model: AI_MODEL,
-    persistence: "sqlite",
+    persistence: remoteSnapshotEnabled ? "sqlite+postgres-snapshot" : "sqlite",
   });
 });
 

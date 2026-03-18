@@ -437,6 +437,7 @@ VITE_API_BASE_URL=                      # Example: https://your-backend.example.
 
 # â”€â”€â”€ Server Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 SERVER_PORT=8787                         # API server port
+DATABASE_URL=                           # Optional: Supabase Postgres URI (stores persistent SQLite snapshot on Vercel)
 SESSION_TTL_HOURS=24                     # Session duration
 AUTH_PASSWORD_SALT=change-this-salt      # Legacy fallback salt for old hashes
 AUTH_PBKDF2_ITERATIONS=210000            # PBKDF2 iteration count
