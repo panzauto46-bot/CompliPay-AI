@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, LogIn, ShieldCheck } from 'lucide-react';
+import { Link, Navigate, useLocation } from 'react-router-dom';
+import { ArrowLeft, Eye, EyeOff, LogIn, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 type DemoCred = { label: string; email: string; password: string };
@@ -51,6 +51,14 @@ export default function Login() {
 
   return (
     <div className="min-h-screen app-theme bg-slate-950 flex items-center justify-center px-4">
+      <Link
+        to="/"
+        className="fixed top-6 left-6 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-200 hover:text-white hover:bg-slate-800 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span className="hidden sm:inline">Kembali ke Landing</span>
+      </Link>
+
       <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center">
