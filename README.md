@@ -80,6 +80,20 @@ Expected health response shape:
 
 For full details, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
+## Visual Diagrams
+
+### System Architecture
+
+![CompliPay AI System Architecture](docs/assets/architecture_diagram.png)
+
+### Payment Flow
+
+![CompliPay AI Payment Flow](docs/assets/payment_flow_diagram.png)
+
+### Tech Stack
+
+![CompliPay AI Tech Stack](docs/assets/tech_stack_diagram.png)
+
 ## Local Development
 
 ### Prerequisites

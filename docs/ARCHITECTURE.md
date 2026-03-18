@@ -15,6 +15,20 @@ CompliPay AI runs as a full-stack product:
 
 Goal: enforce policy-first programmable payments with clear audit evidence.
 
+## Visual Diagrams
+
+### System Architecture
+
+![CompliPay AI System Architecture](assets/architecture_diagram.png)
+
+### Payment Flow
+
+![CompliPay AI Payment Flow](assets/payment_flow_diagram.png)
+
+### Tech Stack
+
+![CompliPay AI Tech Stack](assets/tech_stack_diagram.png)
+
 ## 2) Runtime Components
 
 ### Frontend (`src/`)
