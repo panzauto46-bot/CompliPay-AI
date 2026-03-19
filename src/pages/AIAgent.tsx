@@ -14,6 +14,7 @@ import {
   Brain,
   ArrowRight,
   Sparkles,
+  XCircle,
 } from 'lucide-react';
 import { AIAgentTask } from '../types';
 import { useAppData } from '../context/AppDataContext';
@@ -21,6 +22,11 @@ import { useAuth } from '../context/AuthContext';
 import { sendAIChatMessage } from '../lib/aiClient';
 
 type ChatMessage = { role: 'user' | 'ai'; content: string };
+type TaskFeedback = {
+  type: 'success' | 'error' | 'info';
+  message: string;
+  taskId?: string;
+};
 
 export default function AIAgent() {
   const { user } = useAuth();
@@ -37,7 +43,7 @@ export default function AIAgent() {
   const [isSending, setIsSending] = useState(false);
   const [aiOnline, setAiOnline] = useState(false);
   const [activeModel, setActiveModel] = useState<string>('qwen-plus');
-  const [taskFeedback, setTaskFeedback] = useState<string | null>(null);
+  const [taskFeedback, setTaskFeedback] = useState<TaskFeedback | null>(null);
   const [taskActionLoading, setTaskActionLoading] = useState<Record<string, 'run' | 'pause'>>({});
   const canManageAutomation = user?.role === 'admin' || user?.role === 'operator';
 
@@ -112,6 +118,36 @@ export default function AIAgent() {
     }
   };
 
+  const getTaskTypeLabel = (type: AIAgentTask['type']) => {
+    switch (type) {
+      case 'payment_execution':
+        return 'Payment Execution';
+      case 'treasury_optimization':
+        return 'Treasury Optimization';
+      case 'fx_conversion':
+        return 'FX Conversion';
+      case 'risk_monitoring':
+        return 'Risk Monitoring';
+      default:
+        return 'AI Task';
+    }
+  };
+
+  const getStatusLabel = (status: AIAgentTask['status']) => {
+    switch (status) {
+      case 'running':
+        return 'Running';
+      case 'paused':
+        return 'Paused';
+      case 'scheduled':
+        return 'Scheduled';
+      case 'completed':
+        return 'Completed';
+      default:
+        return status;
+    }
+  };
+
   const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim() || isSending) return;
@@ -147,10 +183,20 @@ export default function AIAgent() {
   const totalSavings = aiAgentTasks.reduce((acc, task) => acc + (task.savings || 0), 0);
   const runningTasks = aiAgentTasks.filter((t) => t.status === 'running').length;
   const isTaskBusy = (taskId: string) => Boolean(taskActionLoading[taskId]);
+  const getTaskActionLoadingLabel = (taskId: string) => {
+    const action = taskActionLoading[taskId];
+    if (action === 'run') return 'Running...';
+    if (action === 'pause') return 'Pausing...';
+    return 'Updating...';
+  };
 
   const handleToggleTask = async (task: AIAgentTask) => {
     if (!canManageAutomation) {
-      setTaskFeedback('Viewer mode: read-only. Hanya admin/operator yang bisa run/pause task.');
+      setTaskFeedback({
+        type: 'info',
+        message: 'Viewer mode is read-only. Only admin/operator can run or pause tasks.',
+        taskId: task.id,
+      });
       return;
     }
 
@@ -163,13 +209,21 @@ export default function AIAgent() {
         action === 'run'
           ? await runAutomationTask(task.id)
           : await pauseAutomationTask(task.id);
-      setTaskFeedback(
-        action === 'run'
-          ? `Task "${nextTask.type.replace('_', ' ')}" berhasil dijalankan.`
-          : `Task "${nextTask.type.replace('_', ' ')}" berhasil dipause.`
-      );
+      setTaskFeedback({
+        type: 'success',
+        taskId: task.id,
+        message:
+          action === 'run'
+            ? `"${getTaskTypeLabel(nextTask.type)}" is now running successfully.`
+            : `"${getTaskTypeLabel(nextTask.type)}" has been paused successfully.`,
+      });
     } catch (error) {
-      setTaskFeedback(error instanceof Error ? error.message : 'Gagal mengubah status task.');
+      const details = error instanceof Error ? error.message : 'Unknown error.';
+      setTaskFeedback({
+        type: 'error',
+        taskId: task.id,
+        message: `Failed to update task status. ${details}`,
+      });
     } finally {
       setTaskActionLoading((prev) => {
         const next = { ...prev };
@@ -206,8 +260,23 @@ export default function AIAgent() {
       </div>
 
       {taskFeedback && (
-        <div className="p-3 bg-slate-800/60 border border-slate-700 rounded-lg text-sm text-slate-200">
-          {taskFeedback}
+        <div
+          className={`p-3 rounded-lg text-sm border flex items-start gap-2 ${
+            taskFeedback.type === 'success'
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+              : taskFeedback.type === 'error'
+              ? 'bg-red-500/10 border-red-500/30 text-red-300'
+              : 'bg-slate-800/60 border-slate-700 text-slate-200'
+          }`}
+        >
+          {taskFeedback.type === 'success' ? (
+            <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
+          ) : taskFeedback.type === 'error' ? (
+            <XCircle className="w-4 h-4 mt-0.5 shrink-0" />
+          ) : (
+            <Clock className="w-4 h-4 mt-0.5 shrink-0" />
+          )}
+          <span>{taskFeedback.message}</span>
         </div>
       )}
 
@@ -254,7 +323,7 @@ export default function AIAgent() {
               <div>
                 <h2 className="font-semibold text-white">AI Assistant</h2>
                 <p className="text-xs text-slate-400">
-                  Powered by {activeModel} • {aiOnline ? 'Live API' : 'API not configured'}
+                  Powered by {activeModel} | {aiOnline ? 'Live API' : 'API not configured'}
                 </p>
               </div>
             </div>
@@ -346,7 +415,7 @@ export default function AIAgent() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-sm font-medium text-white capitalize">
-                        {task.type.replace('_', ' ')}
+                        {getTaskTypeLabel(task.type)}
                       </p>
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${getStatusColor(
@@ -354,7 +423,7 @@ export default function AIAgent() {
                         )}`}
                       >
                         {getStatusIcon(task.status)}
-                        <span className="capitalize">{task.status}</span>
+                        <span>{getStatusLabel(task.status)}</span>
                       </span>
                     </div>
                     <p className="text-sm text-slate-400">{task.description}</p>
@@ -386,6 +455,27 @@ export default function AIAgent() {
                         </span>
                       )}
                     </div>
+
+                    {taskFeedback?.taskId === task.id && (
+                      <div
+                        className={`mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border ${
+                          taskFeedback.type === 'success'
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                            : taskFeedback.type === 'error'
+                            ? 'bg-red-500/10 border-red-500/30 text-red-300'
+                            : 'bg-slate-800 border-slate-700 text-slate-300'
+                        }`}
+                      >
+                        {taskFeedback.type === 'success' ? (
+                          <CheckCircle className="w-3.5 h-3.5" />
+                        ) : taskFeedback.type === 'error' ? (
+                          <XCircle className="w-3.5 h-3.5" />
+                        ) : (
+                          <Clock className="w-3.5 h-3.5" />
+                        )}
+                        <span>{taskFeedback.message}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-1">
@@ -397,13 +487,14 @@ export default function AIAgent() {
                           handleToggleTask(task);
                         }}
                         disabled={isTaskBusy(task.id) || !canManageAutomation}
-                        className="p-2 text-amber-400 hover:bg-slate-700 disabled:opacity-60 disabled:cursor-not-allowed rounded-lg transition-colors"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-amber-300 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 disabled:opacity-60 disabled:cursor-not-allowed rounded-lg transition-colors"
                       >
                         {isTaskBusy(task.id) ? (
                           <RefreshCw className="w-4 h-4 animate-spin" />
                         ) : (
                           <Pause className="w-4 h-4" />
                         )}
+                        <span>{isTaskBusy(task.id) ? getTaskActionLoadingLabel(task.id) : 'Pause'}</span>
                       </button>
                     ) : (
                       <button
@@ -413,13 +504,14 @@ export default function AIAgent() {
                           handleToggleTask(task);
                         }}
                         disabled={isTaskBusy(task.id) || !canManageAutomation}
-                        className="p-2 text-emerald-400 hover:bg-slate-700 disabled:opacity-60 disabled:cursor-not-allowed rounded-lg transition-colors"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 disabled:opacity-60 disabled:cursor-not-allowed rounded-lg transition-colors"
                       >
                         {isTaskBusy(task.id) ? (
                           <RefreshCw className="w-4 h-4 animate-spin" />
                         ) : (
                           <Play className="w-4 h-4" />
                         )}
+                        <span>{isTaskBusy(task.id) ? getTaskActionLoadingLabel(task.id) : 'Run'}</span>
                       </button>
                     )}
                   </div>
@@ -445,7 +537,7 @@ export default function AIAgent() {
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-white capitalize">
-                  {selectedTask.type.replace('_', ' ')}
+                  {getTaskTypeLabel(selectedTask.type)}
                 </h2>
                 <span
                   className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border mt-1 ${getStatusColor(
@@ -453,7 +545,7 @@ export default function AIAgent() {
                   )}`}
                 >
                   {getStatusIcon(selectedTask.status)}
-                  <span className="capitalize">{selectedTask.status}</span>
+                  <span>{getStatusLabel(selectedTask.status)}</span>
                 </span>
               </div>
             </div>
@@ -502,6 +594,27 @@ export default function AIAgent() {
                 </div>
               )}
 
+              {taskFeedback?.taskId === selectedTask.id && (
+                <div
+                  className={`p-3 rounded-lg text-sm border flex items-start gap-2 ${
+                    taskFeedback.type === 'success'
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                      : taskFeedback.type === 'error'
+                      ? 'bg-red-500/10 border-red-500/30 text-red-300'
+                      : 'bg-slate-800/70 border-slate-700 text-slate-200'
+                  }`}
+                >
+                  {taskFeedback.type === 'success' ? (
+                    <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  ) : taskFeedback.type === 'error' ? (
+                    <XCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  ) : (
+                    <Clock className="w-4 h-4 mt-0.5 shrink-0" />
+                  )}
+                  <span>{taskFeedback.message}</span>
+                </div>
+              )}
+
               <div className="flex items-center gap-3 pt-4">
                 <button
                   onClick={() => setSelectedTask(null)}
@@ -521,7 +634,9 @@ export default function AIAgent() {
                     ) : (
                       <Pause className="w-4 h-4" />
                     )}
-                    {isTaskBusy(selectedTask.id) ? 'Updating...' : 'Pause Task'}
+                    {isTaskBusy(selectedTask.id)
+                      ? getTaskActionLoadingLabel(selectedTask.id)
+                      : 'Pause Task'}
                   </button>
                 ) : (
                   <button
@@ -535,7 +650,9 @@ export default function AIAgent() {
                     ) : (
                       <Play className="w-4 h-4" />
                     )}
-                    {isTaskBusy(selectedTask.id) ? 'Updating...' : 'Run Now'}
+                    {isTaskBusy(selectedTask.id)
+                      ? getTaskActionLoadingLabel(selectedTask.id)
+                      : 'Run Now'}
                   </button>
                 )}
               </div>
@@ -546,3 +663,4 @@ export default function AIAgent() {
     </div>
   );
 }
+
