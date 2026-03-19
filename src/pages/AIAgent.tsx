@@ -17,12 +17,14 @@ import {
 } from 'lucide-react';
 import { AIAgentTask } from '../types';
 import { useAppData } from '../context/AppDataContext';
+import { useAuth } from '../context/AuthContext';
 import { sendAIChatMessage } from '../lib/aiClient';
 
 type ChatMessage = { role: 'user' | 'ai'; content: string };
 
 export default function AIAgent() {
-  const { aiAgentTasks } = useAppData();
+  const { user } = useAuth();
+  const { aiAgentTasks, runAutomationTask, pauseAutomationTask } = useAppData();
   const [selectedTask, setSelectedTask] = useState<AIAgentTask | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
@@ -35,6 +37,9 @@ export default function AIAgent() {
   const [isSending, setIsSending] = useState(false);
   const [aiOnline, setAiOnline] = useState(false);
   const [activeModel, setActiveModel] = useState<string>('qwen-plus');
+  const [taskFeedback, setTaskFeedback] = useState<string | null>(null);
+  const [taskActionLoading, setTaskActionLoading] = useState<Record<string, 'run' | 'pause'>>({});
+  const canManageAutomation = user?.role === 'admin' || user?.role === 'operator';
 
   useEffect(() => {
     fetch('/api/health')
@@ -49,6 +54,18 @@ export default function AIAgent() {
         setAiOnline(false);
       });
   }, []);
+
+  useEffect(() => {
+    if (!selectedTask) return;
+    const latestTask = aiAgentTasks.find((task) => task.id === selectedTask.id) ?? null;
+    if (!latestTask) {
+      setSelectedTask(null);
+      return;
+    }
+    if (latestTask !== selectedTask) {
+      setSelectedTask(latestTask);
+    }
+  }, [aiAgentTasks, selectedTask]);
 
   const getTaskIcon = (type: string) => {
     switch (type) {
@@ -129,6 +146,38 @@ export default function AIAgent() {
 
   const totalSavings = aiAgentTasks.reduce((acc, task) => acc + (task.savings || 0), 0);
   const runningTasks = aiAgentTasks.filter((t) => t.status === 'running').length;
+  const isTaskBusy = (taskId: string) => Boolean(taskActionLoading[taskId]);
+
+  const handleToggleTask = async (task: AIAgentTask) => {
+    if (!canManageAutomation) {
+      setTaskFeedback('Viewer mode: read-only. Hanya admin/operator yang bisa run/pause task.');
+      return;
+    }
+
+    const action: 'run' | 'pause' = task.status === 'running' ? 'pause' : 'run';
+    setTaskFeedback(null);
+    setTaskActionLoading((prev) => ({ ...prev, [task.id]: action }));
+
+    try {
+      const nextTask =
+        action === 'run'
+          ? await runAutomationTask(task.id)
+          : await pauseAutomationTask(task.id);
+      setTaskFeedback(
+        action === 'run'
+          ? `Task "${nextTask.type.replace('_', ' ')}" berhasil dijalankan.`
+          : `Task "${nextTask.type.replace('_', ' ')}" berhasil dipause.`
+      );
+    } catch (error) {
+      setTaskFeedback(error instanceof Error ? error.message : 'Gagal mengubah status task.');
+    } finally {
+      setTaskActionLoading((prev) => {
+        const next = { ...prev };
+        delete next[task.id];
+        return next;
+      });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -145,11 +194,22 @@ export default function AIAgent() {
             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
             <span className="text-sm font-medium text-emerald-400">Agent Active</span>
           </div>
+          {!canManageAutomation && (
+            <span className="px-3 py-2 text-xs font-medium rounded-lg bg-slate-800 text-slate-300 border border-slate-700">
+              Viewer mode: read-only
+            </span>
+          )}
           <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
             <Settings className="w-5 h-5" />
           </button>
         </div>
       </div>
+
+      {taskFeedback && (
+        <div className="p-3 bg-slate-800/60 border border-slate-700 rounded-lg text-sm text-slate-200">
+          {taskFeedback}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -330,12 +390,36 @@ export default function AIAgent() {
 
                   <div className="flex items-center gap-1">
                     {task.status === 'running' ? (
-                      <button className="p-2 text-amber-400 hover:bg-slate-700 rounded-lg transition-colors">
-                        <Pause className="w-4 h-4" />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleTask(task);
+                        }}
+                        disabled={isTaskBusy(task.id) || !canManageAutomation}
+                        className="p-2 text-amber-400 hover:bg-slate-700 disabled:opacity-60 disabled:cursor-not-allowed rounded-lg transition-colors"
+                      >
+                        {isTaskBusy(task.id) ? (
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Pause className="w-4 h-4" />
+                        )}
                       </button>
                     ) : (
-                      <button className="p-2 text-emerald-400 hover:bg-slate-700 rounded-lg transition-colors">
-                        <Play className="w-4 h-4" />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleTask(task);
+                        }}
+                        disabled={isTaskBusy(task.id) || !canManageAutomation}
+                        className="p-2 text-emerald-400 hover:bg-slate-700 disabled:opacity-60 disabled:cursor-not-allowed rounded-lg transition-colors"
+                      >
+                        {isTaskBusy(task.id) ? (
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Play className="w-4 h-4" />
+                        )}
                       </button>
                     )}
                   </div>
@@ -426,14 +510,32 @@ export default function AIAgent() {
                   Close
                 </button>
                 {selectedTask.status === 'running' ? (
-                  <button className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-colors">
-                    <Pause className="w-4 h-4" />
-                    Pause Task
+                  <button
+                    type="button"
+                    onClick={() => handleToggleTask(selectedTask)}
+                    disabled={isTaskBusy(selectedTask.id) || !canManageAutomation}
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+                  >
+                    {isTaskBusy(selectedTask.id) ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Pause className="w-4 h-4" />
+                    )}
+                    {isTaskBusy(selectedTask.id) ? 'Updating...' : 'Pause Task'}
                   </button>
                 ) : (
-                  <button className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-colors">
-                    <Play className="w-4 h-4" />
-                    Run Now
+                  <button
+                    type="button"
+                    onClick={() => handleToggleTask(selectedTask)}
+                    disabled={isTaskBusy(selectedTask.id) || !canManageAutomation}
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+                  >
+                    {isTaskBusy(selectedTask.id) ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Play className="w-4 h-4" />
+                    )}
+                    {isTaskBusy(selectedTask.id) ? 'Updating...' : 'Run Now'}
                   </button>
                 )}
               </div>

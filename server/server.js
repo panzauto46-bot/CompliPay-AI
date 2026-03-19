@@ -1933,6 +1933,51 @@ app.post("/api/compliance/alerts/:id/resolve", requireAuth, requireRole(["admin"
   return res.json({ alert: nextAlert, auditEvent });
 });
 
+app.post("/api/ai/tasks/:id/run", requireAuth, requireRole(["admin", "operator"]), (req, res) => {
+  const taskRow = db.prepare("SELECT * FROM ai_tasks WHERE id = ?").get(req.params.id);
+  if (!taskRow) return res.status(404).json({ error: "AI task not found." });
+
+  const now = nowIso();
+  const defaultNextRun = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  db.prepare("UPDATE ai_tasks SET status = ?, last_run = ?, next_run = ? WHERE id = ?").run(
+    "running",
+    now,
+    defaultNextRun,
+    taskRow.id
+  );
+
+  const nextTask = serializeTask(db.prepare("SELECT * FROM ai_tasks WHERE id = ?").get(taskRow.id));
+  const auditEvent = appendAuditEvent({
+    category: "ai",
+    action: "task_run",
+    message: `AI task started: ${String(nextTask.type).replace(/_/g, " ")}.`,
+    userId: req.auth.user.id,
+  });
+
+  return res.json({ task: nextTask, auditEvent });
+});
+
+app.post("/api/ai/tasks/:id/pause", requireAuth, requireRole(["admin", "operator"]), (req, res) => {
+  const taskRow = db.prepare("SELECT * FROM ai_tasks WHERE id = ?").get(req.params.id);
+  if (!taskRow) return res.status(404).json({ error: "AI task not found." });
+
+  db.prepare("UPDATE ai_tasks SET status = ?, next_run = ? WHERE id = ?").run(
+    "paused",
+    null,
+    taskRow.id
+  );
+
+  const nextTask = serializeTask(db.prepare("SELECT * FROM ai_tasks WHERE id = ?").get(taskRow.id));
+  const auditEvent = appendAuditEvent({
+    category: "ai",
+    action: "task_pause",
+    message: `AI task paused: ${String(nextTask.type).replace(/_/g, " ")}.`,
+    userId: req.auth.user.id,
+  });
+
+  return res.json({ task: nextTask, auditEvent });
+});
+
 app.post(
   "/api/ai/chat",
   requireAuth,

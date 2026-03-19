@@ -57,6 +57,8 @@ interface AppDataContextValue {
     mode: 'manual' | 'ai'
   ) => Promise<{ batchId: string; summary: BatchExecutionSummary; results: BatchExecutionResultItem[] }>;
   requestAIRecommendation: (paymentId: string) => Promise<string>;
+  runAutomationTask: (taskId: string) => Promise<AIAgentTask>;
+  pauseAutomationTask: (taskId: string) => Promise<AIAgentTask>;
   resolveAlert: (alertId: string) => Promise<void>;
   refreshWalletBalances: () => Promise<void>;
   exportTransactionsCsv: () => void;
@@ -296,6 +298,32 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     return response.recommendation;
   };
 
+  const runAutomationTask = async (taskId: string): Promise<AIAgentTask> => {
+    const response = await apiRequest<{ task: any; auditEvent?: any }>(`/api/ai/tasks/${taskId}/run`, {
+      method: 'POST',
+    });
+
+    const task = hydrateTask(response.task);
+    setAiAgentTasks((prev) => prev.map((item) => (item.id === task.id ? task : item)));
+    if (response.auditEvent) {
+      setAuditEvents((prev) => [hydrateAudit(response.auditEvent), ...prev]);
+    }
+    return task;
+  };
+
+  const pauseAutomationTask = async (taskId: string): Promise<AIAgentTask> => {
+    const response = await apiRequest<{ task: any; auditEvent?: any }>(`/api/ai/tasks/${taskId}/pause`, {
+      method: 'POST',
+    });
+
+    const task = hydrateTask(response.task);
+    setAiAgentTasks((prev) => prev.map((item) => (item.id === task.id ? task : item)));
+    if (response.auditEvent) {
+      setAuditEvents((prev) => [hydrateAudit(response.auditEvent), ...prev]);
+    }
+    return task;
+  };
+
   const executePayment = async (
     paymentId: string,
     mode: 'manual' | 'ai'
@@ -433,6 +461,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     executePayment,
     executeBatchPayments,
     requestAIRecommendation,
+    runAutomationTask,
+    pauseAutomationTask,
     resolveAlert,
     refreshWalletBalances,
     exportTransactionsCsv,
