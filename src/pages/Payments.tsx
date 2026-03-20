@@ -713,6 +713,25 @@ export default function Payments() {
                 </div>
               )}
 
+              {selectedPayment.lastTxHash && (
+                <div className="p-4 bg-violet-500/10 border border-violet-500/20 rounded-lg">
+                  <p className="text-xs text-violet-300 mb-2">Execution Evidence</p>
+                  <div className="space-y-1.5">
+                    <p className="text-sm text-slate-200 font-mono break-all">
+                      Tx: {selectedPayment.lastTxHash}
+                    </p>
+                    <a
+                      href={`https://explorer.solana.com/tx/${selectedPayment.lastTxHash}?cluster=devnet`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 transition-colors"
+                    >
+                      View on Solana Explorer →
+                    </a>
+                  </div>
+                </div>
+              )}
+
               {!canOperatePayments && (
                 <p className="text-xs text-slate-400">
                   Viewer role hanya dapat melihat detail payment.
