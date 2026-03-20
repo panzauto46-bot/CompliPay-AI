@@ -1,8 +1,8 @@
 # CompliPay AI
 
-Updated: March 19, 2026 (Asia/Jakarta)
-Status: Demo-ready and deployed on Vercel
-Production readiness estimate: about 90%
+Updated: March 21, 2026 (Asia/Jakarta)
+Status: Demo-ready and deployed on Vercel — final submission polish
+Production readiness estimate: about 92%
 
 CompliPay AI is a full-stack programmable stablecoin operations platform for institutional workflows.
 It combines policy checks (KYC, KYT, AML, Travel Rule), guarded execution, AI assistance, and auditable evidence.

@@ -170,7 +170,10 @@ export default function Layout({ children }: LayoutProps) {
                 Solana Testnet
               </span>
               <span className="text-slate-500">•</span>
-              <span className="text-sm text-slate-400">Block: 245,892,103</span>
+              <span className="flex items-center gap-1.5 text-sm text-slate-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live
+              </span>
             </div>
 
             <div className="flex items-center gap-4">

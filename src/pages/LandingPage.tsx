@@ -117,7 +117,7 @@ export default function LandingPage() {
           <div className="hero-copy">
             <p className="eyebrow">Institutional Stablecoin Infrastructure</p>
             <h1>
-              A modern landing page for <span>Compliant Programmable Payments</span> on Solana.
+              Institutional-Grade <span>Compliant Programmable Payments</span> on Solana.
             </h1>
             <p className="hero-text">
               CompliPay AI helps institutions automate cross-border payments with compliance
@@ -255,8 +255,8 @@ export default function LandingPage() {
 
           <div className="cta-panel">
             <div>
-              <p className="eyebrow">Ready to Pitch</p>
-              <h2>UI is ready for hackathon presentation and a 3-minute demo video.</h2>
+              <p className="eyebrow">Get Started</p>
+              <h2>Experience compliance-first programmable payments — live on Solana testnet.</h2>
             </div>
             <Link to="/dashboard" className="btn btn-primary">
               Enter Product Demo
